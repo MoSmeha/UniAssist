@@ -2,6 +2,11 @@ import PropTypes from "prop-types";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import { createTheme } from "@mui/material/styles";
+import Stack from "@mui/material/Stack";
+import Divider from "@mui/material/Divider";
+import IconButton from "@mui/material/IconButton";
+import Chip from "@mui/material/Chip"; // Import Chip
+
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ChatIcon from "@mui/icons-material/Chat";
 import LogoutIcon from "@mui/icons-material/Logout";
@@ -11,90 +16,25 @@ import RecentActorsIcon from "@mui/icons-material/RecentActors";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import LayersIcon from "@mui/icons-material/Layers";
-import Stack from "@mui/material/Stack";
-import Divider from "@mui/material/Divider";
-import IconButton from "@mui/material/IconButton";
-import * as React from "react";
-import AnnouncementIcon from "@mui/icons-material/Announcement"; // Added for Announcements
-import NotificationsIcon from "@mui/icons-material/Notifications";
+import AnnouncementIcon from "@mui/icons-material/Announcement";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+
 import { AccountPreview } from "@toolpad/core/Account";
 import { AppProvider } from "@toolpad/core/AppProvider";
 import { DashboardLayout } from "@toolpad/core/DashboardLayout";
 import { useDemoRouter } from "@toolpad/core/internal";
+
 import { useAuthStore } from "./zustand/AuthStore";
 import useLogout from "./hooks/useLogout";
+
 import ChatApp from "./pages/ChatApp/ChatApp";
-import SignUp from "../src/pages/signup/SignUp";
+import SignUp from "./pages/signup/SignUp";
 import ScheduleTable from "./pages/Schedule/ScheduleComponent";
 import TODO from "./pages/TodoList/TodoList";
 import StaffList from "./pages/StaffInfo/StaffList";
-import CampaignIcon from "@mui/icons-material/Campaign";
 import Announcements from "./pages/Announcement/Announcements";
-
-import SmartToyIcon from "@mui/icons-material/SmartToy";
 import ChatbotFrontend from "./Chatbot";
-// const NAVIGATION = [
-//   {
-//     kind: "header",
-//     title: "Main items",
-//   },
-//   {
-//     segment: "dashboard",
-//     title: "Dashboard",
-//     icon: <DashboardIcon />,
-//   },
-//   {
-//     segment: "Chat",
-//     title: "Chat",
-//     icon: <ChatIcon />,
-//   },
-//   {
-//     segment: "staffList",
-//     title: "Staff List",
-//     icon: <RecentActorsIcon />,
-//   },
-//   {
-//     segment: "Schedule",
-//     title: "Schedule",
-//     icon: <DateRangeIcon />,
-//   },
-//   {
-//     kind: "divider",
-//   },
-//   {
-//     kind: "header",
-//     title: "Student Tools",
-//   },
-//   {
-//     segment: "tools",
-//     title: "Tools",
-//     icon: <ConstructionIcon />,
-//     children: [
-//       {
-//         segment: "checkList",
-//         title: "checkList",
-//         icon: <ChecklistIcon />,
-//       },
-//     ],
-//   },
-//   {
-//     kind: "divider",
-//   },
-//   {
-//     kind: "header",
-//     title: "Analytics",
-//   },
-//   {
-//     segment: "integrations",
-//     title: "Integrations",
-//     icon: <LayersIcon />,
-//   },
-//   {
-//     segment: "SignUp",
-//     title: "SignUp",
-//     icon: <InputIcon />,
-//   },
-// ];
+import useConversationStore from "./zustand/useConversationStore";
 
 const demoTheme = createTheme({
   cssVariables: {
@@ -112,7 +52,7 @@ const demoTheme = createTheme({
   },
 });
 
-// Update routes to include Announcements
+// Pages rendered based on route
 const routes = {
   "/Chat": <ChatApp />,
   "/staffList": <StaffList />,
@@ -120,8 +60,7 @@ const routes = {
   "/tools/checkList": <TODO />,
   "/announcements": <Announcements />,
   "/tools/AIBot": <ChatbotFrontend />,
-
-  // Add Announcements route
+  "/SignUp": <SignUp />,
 };
 
 function DemoPageContent({ pathname }) {
@@ -195,128 +134,77 @@ SidebarFooterProfile.propTypes = {
   mini: PropTypes.bool.isRequired,
 };
 
-function DashboardLayoutBasic(props) {
-  const { window } = props;
+function DashboardLayoutBasic({ window }) {
   const router = useDemoRouter("/dashboard");
   const demoWindow = window !== undefined ? window() : undefined;
-
-  // Get the authenticated user from Zustand store
   const authUser = useAuthStore((state) => state.authUser);
 
-  // Define a function to generate the navigation menu dynamically
-  const getNavigation = () => {
-    let navigation = [
-      {
-        kind: "header",
-        title: "Main items",
-      },
-      {
-        segment: "dashboard",
-        title: "Dashboard",
-        icon: <DashboardIcon />,
-      },
-      {
-        segment: "Chat",
-        title: "Chat",
-        icon: <ChatIcon />,
-      },
-      {
-        segment: "staffList",
-        title: "Staff List",
-        icon: <RecentActorsIcon />,
-      },
-      {
-        segment: "Schedule",
-        title: "Schedule",
-        icon: <DateRangeIcon />,
-      },
+  const conversations = useConversationStore((state) => state.conversations);
 
-      // Add Announcements to the main navigation
-      {
-        segment: "announcements",
-        title: "Announcements",
-        icon: <AnnouncementIcon />,
-      },
+  // Calculate total unread messages by summing unreadCount from all conversations
+  const unreadChatMessages = conversations
+    ? conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0)
+    : 0;
 
-      {
-        kind: "divider",
-      },
-      {
-        kind: "header",
-        title: "Student Tools",
-      },
-      {
-        segment: "tools",
-        title: "Tools",
-        icon: <ConstructionIcon />,
-        children: [
-          {
-            segment: "checkList",
-            title: "checkList",
-            icon: <ChecklistIcon />,
-          },
-          {
-            segment: "AIBot",
-            title: "Ai chatBot",
-            icon: <SmartToyIcon />,
-          },
-        ],
-      },
-      {
-        kind: "divider",
-      },
-      {
-        kind: "header",
-        title: "Analytics",
-      },
-      {
-        segment: "integrations",
-        title: "Integrations",
-        icon: <LayersIcon />,
-      },
-    ];
+  // Immutable navigation logic
+  const baseNavigation = [
+    { kind: "header", title: "Main items" },
+    { segment: "dashboard", title: "Dashboard", icon: <DashboardIcon /> },
+    {
+      segment: "Chat",
+      title: "Chat",
+      icon: <ChatIcon />,
+      // Add the action property with a Chip component
+      action:
+        unreadChatMessages > 0 ? (
+          <Chip label={unreadChatMessages} color="primary" size="small" />
+        ) : null,
+    },
+    { segment: "staffList", title: "Staff List", icon: <RecentActorsIcon /> },
+    { segment: "Schedule", title: "Schedule", icon: <DateRangeIcon /> },
+    {
+      segment: "announcements",
+      title: "Announcements",
+      icon: <AnnouncementIcon />,
+    },
+    { kind: "divider" },
+    { kind: "header", title: "Student Tools" },
+    {
+      segment: "tools",
+      title: "Tools",
+      icon: <ConstructionIcon />,
+      children: [
+        { segment: "checkList", title: "Checklist", icon: <ChecklistIcon /> },
+        { segment: "AIBot", title: "AI ChatBot", icon: <SmartToyIcon /> },
+      ],
+    },
+    { kind: "divider" },
+    { kind: "header", title: "Analytics" },
+    { segment: "integrations", title: "Integrations", icon: <LayersIcon /> },
+  ];
 
-    // Only add the SignUp option if the user is an admin
-    if (authUser?.role === "admin") {
-      navigation.push({
-        segment: "SignUp",
-        title: "SignUp",
-        icon: <InputIcon />,
-      });
-    }
+  const adminNavigation =
+    authUser?.role === "admin"
+      ? [{ segment: "SignUp", title: "SignUp", icon: <InputIcon /> }]
+      : [];
 
-    // We don't need to keep the separate CreateAnnouncement route
-    // since we've integrated that functionality into the Announcements page
+  const navigation = [...baseNavigation, ...adminNavigation];
 
-    return navigation;
+  // Authenticated user session
+  const userSession = {
+    user: {
+      name:
+        authUser?.firstName && authUser?.lastName
+          ? `${authUser.firstName} ${authUser.lastName}`
+          : "Guest User",
+      email: authUser?.email || "guest@example.com",
+      image: authUser?.profilePic || "https://via.placeholder.com/40",
+    },
   };
-
-  // Create a session object using the real user data
-  const userSession = authUser
-    ? {
-        user: {
-          name: authUser.firstName + " " + authUser.lastName || "Guest User",
-          email: authUser.email || "guest@example.com",
-          image: authUser.profilePic || "https://via.placeholder.com/40",
-        },
-      }
-    : {
-        user: {
-          name: "Guest User",
-          email: "guest@example.com",
-          image: "https://via.placeholder.com/40",
-        },
-      };
-
-  React.useEffect(() => {
-    if (!authUser && router.pathname !== "/login") {
-      console.log("User not authenticated");
-    }
-  }, [authUser, router]);
 
   return (
     <AppProvider
-      navigation={getNavigation()} // Use the dynamically generated navigation
+      navigation={navigation}
       branding={{
         logo: (
           <img

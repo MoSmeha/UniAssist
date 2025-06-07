@@ -1,17 +1,86 @@
 import { List, Box, CircularProgress, Typography } from "@mui/material";
-import useGetConversations from "../../hooks/useGetConversations";
 import Conversation from "./Conversation";
 
+import { useEffect } from "react";
+import useConversation from "../../zustand/useConversation";
+import useConversationStore from "../../zustand/useConversationStore";
+
 const Conversations = ({ setSelectedContact, searchTerm }) => {
-  const { loading, conversations } = useGetConversations();
+  const { setSelectedConversation } = useConversation();
+  const conversations = useConversationStore((state) => state.conversations);
+  const fetchConversations = useConversationStore(
+    (state) => state.fetchConversations
+  );
+  const updateUnreadCount = useConversationStore(
+    (state) => state.updateUnreadCount
+  );
+  const loading = useConversationStore((state) => state.loading);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  useEffect(() => {
+    const handleNewMessage = (event) => {
+      const newMessage = event.detail;
+      updateUnreadCount(
+        newMessage.senderId,
+        (conversations.find((conv) => conv._id === newMessage.senderId)
+          ?.unreadCount || 0) + 1
+      );
+    };
+
+    const handleUpdateUnreadCount = (event) => {
+      const { userId, unreadCount } = event.detail;
+      updateUnreadCount(userId, unreadCount);
+    };
+
+    window.addEventListener("socketNewMessage", handleNewMessage);
+    window.addEventListener("socketUpdateUnreadCount", handleUpdateUnreadCount);
+
+    return () => {
+      window.removeEventListener("socketNewMessage", handleNewMessage);
+      window.removeEventListener(
+        "socketUpdateUnreadCount",
+        handleUpdateUnreadCount
+      );
+    };
+  }, [conversations, updateUnreadCount]);
+
+  const handleSelectConversation = (conversation) => {
+    setSelectedConversation(conversation);
+    setSelectedContact(conversation);
+
+    // Reset unreadCount in zustand store
+    updateUnreadCount(conversation._id, 0);
+
+    // Call backend API to mark messages as read
+    fetch(`/api/messages/read/${conversation._id}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }).catch((error) => {
+      console.error("Failed to mark messages as read:", error);
+    });
+  };
+
+  // Sort conversations so that those with unreadCount > 0 appear first
+  const sortedConversations = [...conversations].sort((a, b) => {
+    const aUnread = a.unreadCount || 0;
+    const bUnread = b.unreadCount || 0;
+    if (aUnread > 0 && bUnread === 0) return -1;
+    if (aUnread === 0 && bUnread > 0) return 1;
+    return 0;
+  });
 
   // Filter conversations based on searchTerm
   const filteredConversations = searchTerm
-    ? conversations.filter((conversation) => {
+    ? sortedConversations.filter((conversation) => {
         const fullName = `${conversation.firstName} ${conversation.lastName}`;
         return fullName.toLowerCase().includes(searchTerm.toLowerCase());
       })
-    : conversations;
+    : sortedConversations;
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -20,7 +89,7 @@ const Conversations = ({ setSelectedContact, searchTerm }) => {
           variant="body1"
           sx={{ textAlign: "center", mt: 3, color: "text.secondary" }}
         >
-          No users found matching "{searchTerm}"
+          No users found matching {searchTerm}
         </Typography>
       )}
 
@@ -30,7 +99,8 @@ const Conversations = ({ setSelectedContact, searchTerm }) => {
             key={conversation._id}
             conversation={conversation}
             lastIdx={idx === filteredConversations.length - 1}
-            setSelectedContact={setSelectedContact}
+            setSelectedContact={handleSelectConversation}
+            unreadCount={conversation.unreadCount}
           />
         ))}
       </List>

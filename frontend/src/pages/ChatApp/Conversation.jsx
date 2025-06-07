@@ -6,11 +6,14 @@ import {
   Divider,
   Typography,
   ListItemButton,
+  Box,
 } from "@mui/material";
 import { useSocketStore } from "../../zustand/SocketStore";
 import useConversation from "../../zustand/useConversation";
 
-const Conversation = ({ conversation, lastIdx }) => {
+import React from "react";
+
+const Conversation = React.memo(({ conversation, lastIdx, unreadCount }) => {
   const { setSelectedConversation } = useConversation();
   const onlineUsers = useSocketStore((state) => state.onlineUsers);
   const isOnline = onlineUsers.includes(conversation._id);
@@ -24,6 +27,7 @@ const Conversation = ({ conversation, lastIdx }) => {
             variant="dot"
             invisible={!isOnline}
             overlap="circular"
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }} // Optional: Adjust online indicator position
           >
             <Avatar
               src={conversation.profilePic}
@@ -33,7 +37,33 @@ const Conversation = ({ conversation, lastIdx }) => {
           </Badge>
         </ListItemAvatar>
         <ListItemText
-          primary={conversation.firstName + " " + conversation.lastName}
+          primary={
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <Typography
+                variant="body1"
+                noWrap
+                sx={{ flexGrow: 1, minWidth: 0 }}
+              >
+                {" "}
+                {/* flexGrow and minWidth for proper text truncation */}
+                {conversation.firstName + " " + conversation.lastName}
+              </Typography>
+              {unreadCount > 0 && (
+                <Box sx={{ ml: 2, display: "flex", alignItems: "center" }}>
+                  {" "}
+                  {/* Added Box for centering and spacing */}
+                  <Badge badgeContent={unreadCount} color="error" />
+                </Box>
+              )}
+            </Box>
+          }
           secondary={
             <Typography
               variant="body2"
@@ -50,6 +80,7 @@ const Conversation = ({ conversation, lastIdx }) => {
       {!lastIdx && <Divider variant="inset" component="li" />}
     </>
   );
-};
+});
+Conversation.displayName = "Conversation";
 
 export default Conversation;

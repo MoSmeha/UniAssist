@@ -1,6 +1,6 @@
 // Messages.jsx
 import { useEffect, useRef } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { Box, CircularProgress, useTheme } from "@mui/material"; // Import useTheme
 import useGetMessages from "../../hooks/useGetMessages";
 import useListenMessages from "../../hooks/useListenMessages";
 import Message from "./Message";
@@ -9,12 +9,16 @@ const Messages = () => {
   const { messages, loading } = useGetMessages();
   useListenMessages();
   const lastMessageRef = useRef();
+  const theme = useTheme(); // Get the current theme
 
   useEffect(() => {
     setTimeout(() => {
       lastMessageRef.current?.scrollIntoView({ behavior: "smooth" });
     }, 100);
   }, [messages]);
+
+  // Determine background color based on theme mode
+  const backgroundColor = theme.palette.mode === "dark" ? "#1a1a1a" : "#f0f2f5"; // Example light mode color
 
   return (
     <Box
@@ -23,7 +27,7 @@ const Messages = () => {
         flexDirection: "column",
         width: "100%",
         minHeight: "calc(100vh - 230px)", // Adjust this value based on your header/footer heights
-        backgroundColor: "#1a1a1a",
+        backgroundColor: backgroundColor, // Use the dynamic background color
         overflowY: "auto",
         p: 2,
         gap: 2,

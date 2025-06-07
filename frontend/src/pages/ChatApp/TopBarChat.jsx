@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -19,12 +19,11 @@ const TopBar = ({ contact, onBack, setSearchTerm }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Pass the search term to parent component
     setSearchTerm(search);
   };
 
   return (
-    <AppBar position="static">
+    <AppBar position="sticky">
       <Toolbar sx={{ display: "flex", alignItems: "center" }}>
         {contact && (
           <IconButton edge="start" onClick={onBack} color="inherit">

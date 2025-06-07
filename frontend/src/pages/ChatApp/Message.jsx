@@ -13,6 +13,9 @@ const Message = ({ message }) => {
     ? authUser.profilePic
     : selectedConversation?.profilePic;
 
+  // Determine if message is unread for current user
+  const isUnread = !fromMe && !message.read;
+
   return (
     <Box
       sx={{
@@ -43,7 +46,11 @@ const Message = ({ message }) => {
       >
         <Box
           sx={{
-            backgroundColor: fromMe ? "#0084ff" : "#ffffff",
+            backgroundColor: isUnread
+              ? "#e0e0e0" // Light blue for unread messages
+              : fromMe
+              ? "#0084ff"
+              : "#ffffff",
             color: fromMe ? "#ffffff" : "#000000",
             px: 1,
             py: 1,
@@ -52,6 +59,7 @@ const Message = ({ message }) => {
             borderTopRightRadius: fromMe ? 2 : 16,
             borderBottomLeftRadius: 16,
             borderBottomRightRadius: 16,
+            fontWeight: isUnread ? "bold" : "normal",
           }}
         >
           <Typography variant="body1">{message.message}</Typography>

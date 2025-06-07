@@ -14,6 +14,14 @@ const useGetMessages = () => {
         const data = await res.json();
         if (data.error) throw new Error(data.error);
         setMessages(data);
+
+        // Mark messages as read after fetching
+        await fetch(`/api/messages/read/${selectedConversation._id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
       } catch (error) {
         toast.error(error.message);
       } finally {
