@@ -34,6 +34,8 @@ import TODO from "./pages/TodoList/TodoList";
 import StaffList from "./pages/StaffInfo/StaffList";
 import Announcements from "./pages/Announcement/Announcements";
 import ChatbotFrontend from "./Chatbot";
+import LostAndFoundPage from "./pages/Lost&Found/LostAndFoundPage";
+
 import useConversationStore from "./zustand/useConversationStore";
 
 const demoTheme = createTheme({
@@ -61,6 +63,7 @@ const routes = {
   "/announcements": <Announcements />,
   "/tools/AIBot": <ChatbotFrontend />,
   "/SignUp": <SignUp />,
+  "/Lost&Found": <LostAndFoundPage />,
 };
 
 function DemoPageContent({ pathname }) {
@@ -161,6 +164,11 @@ function DashboardLayoutBasic({ window }) {
         ) : null,
     },
     { segment: "staffList", title: "Staff List", icon: <RecentActorsIcon /> },
+    {
+      segment: "Lost&Found",
+      title: "Lost&Found",
+      icon: <RecentActorsIcon />,
+    },
     { segment: "Schedule", title: "Schedule", icon: <DateRangeIcon /> },
     {
       segment: "announcements",

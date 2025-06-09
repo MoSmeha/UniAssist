@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+
 import {
   AppBar,
   Toolbar,
@@ -20,92 +21,123 @@ import {
   useTheme,
   Divider,
   Paper,
-  Chip,
   FormControl,
   Select,
   MenuItem,
-  Badge,
-  IconButton,
   alpha,
 } from "@mui/material";
+
 import {
   Edit,
   Delete,
   ExpandMore as ExpandMoreIcon,
   Add as AddIcon,
   Event as EventIcon,
-  AccessTime as TimeIcon,
   FilterList as FilterIcon,
   TaskAlt as TaskIcon,
 } from "@mui/icons-material";
+
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+
 import dayjs from "dayjs";
+
 import toast from "react-hot-toast";
 
 const TODO = () => {
   const theme = useTheme();
+
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
   const isDarkMode = theme.palette.mode === "dark";
 
   // Mapping for priority colors - adjusted for both dark and light modes
+
   const priorityColors = {
     Top: {
       border: isDarkMode ? "#ff5252" : "#f44336",
+
       chip: isDarkMode ? "#ff5252" : "#f44336",
     },
+
     Moderate: {
       border: isDarkMode ? "#ffab40" : "#ff9800",
+
       chip: isDarkMode ? "#ffab40" : "#ff9800",
     },
+
     Low: {
       border: isDarkMode ? "#69f0ae" : "#4caf50",
+
       chip: isDarkMode ? "#69f0ae" : "#4caf50",
     },
   };
 
   // App bar gradient based on theme
+
   const appBarGradient = isDarkMode
     ? "linear-gradient(45deg, #283593 30%, #1565C0 90%)"
     : "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)";
+
   // Mapping for priority colors
 
   const [todos, setTodos] = useState([]);
+
   const [filteredTodos, setFilteredTodos] = useState([]);
+
   const [priorityFilter, setPriorityFilter] = useState("All");
+
   const [open, setOpen] = useState(false);
+
   const [editMode, setEditMode] = useState(false);
+
   const [editingTodoId, setEditingTodoId] = useState(null);
+
   const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     title: "",
+
     description: "",
+
     date: "",
+
     startTime: "",
+
     endTime: "",
+
     completed: false,
+
     priority: "Moderate", // default priority
   });
 
   const fetchTodos = async () => {
     try {
       const response = await fetch("/api/todo");
+
       if (!response.ok) {
         throw new Error("Failed to fetch todos");
       }
+
       const data = await response.json();
+
       setTodos(data);
     } catch (error) {
       console.error("Error fetching todos:", error);
+
       toast.error("Error fetching todos: " + error.message);
     }
   };
 
   // Count uncompleted tasks
+
   const uncompletedCount = todos.filter((todo) => !todo.completed).length;
 
   // Apply priority filter
+
   useEffect(() => {
     if (priorityFilter === "All") {
       setFilteredTodos(todos);
@@ -122,16 +154,20 @@ const TODO = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+
     setFormData((prev) => ({
       ...prev,
+
       [name]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleTimeChange = (field, value) => {
     const formattedTime = value ? dayjs(value).format("HH:mm") : "";
+
     setFormData((prev) => ({
       ...prev,
+
       [field]: formattedTime,
     }));
   };
@@ -144,7 +180,9 @@ const TODO = () => {
     try {
       const response = await fetch(`/api/todo/${id}`, {
         method: "PUT",
+
         headers: { "Content-Type": "application/json" },
+
         body: JSON.stringify({ completed }),
       });
 
@@ -157,7 +195,9 @@ const TODO = () => {
           todo._id === id ? { ...todo, completed: !completed } : todo
         )
       );
+
       console.error("Error updating todo status:", error);
+
       toast.error("Error updating todo status: " + error.message);
     }
   };
@@ -165,63 +205,93 @@ const TODO = () => {
   const handleOpenForm = () => {
     setFormData({
       title: "",
+
       description: "",
+
       date: "",
+
       startTime: "",
+
       endTime: "",
+
       completed: false,
+
       priority: "Moderate",
     });
+
     setEditMode(false);
+
     setEditingTodoId(null);
+
     setOpen(true);
   };
 
   const handleEdit = (todo) => {
     setFormData({
       title: todo.title,
+
       description: todo.description,
+
       date: todo.date.split("T")[0],
+
       startTime: todo.startTime,
+
       endTime: todo.endTime,
+
       completed: todo.completed,
+
       priority: todo.priority,
     });
+
     setEditMode(true);
+
     setEditingTodoId(todo._id);
+
     setOpen(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
+
     try {
       if (editMode) {
         const response = await fetch(`/api/todo/${editingTodoId}`, {
           method: "PUT",
+
           headers: { "Content-Type": "application/json" },
+
           body: JSON.stringify(formData),
         });
+
         if (!response.ok) {
           throw new Error("Failed to update todo");
         }
       } else {
         const response = await fetch("/api/todo", {
           method: "POST",
+
           headers: { "Content-Type": "application/json" },
+
           body: JSON.stringify(formData),
         });
+
         if (!response.ok) {
           throw new Error("Failed to add todo");
         }
       }
+
       fetchTodos();
+
       setOpen(false);
+
       toast.success(
         editMode ? "Todo updated successfully" : "Todo added successfully"
       );
     } catch (error) {
       console.error("Error saving todo:", error);
+
       toast.error("Error saving todo: " + error.message);
     } finally {
       setLoading(false);
@@ -233,13 +303,17 @@ const TODO = () => {
       const response = await fetch(`/api/todo/${id}`, {
         method: "DELETE",
       });
+
       if (!response.ok) {
         throw new Error("Failed to delete todo");
       }
+
       fetchTodos();
+
       toast.success("Todo deleted successfully");
     } catch (error) {
       console.error("Error deleting todo:", error);
+
       toast.error("Error deleting todo: " + error.message);
     }
   };
@@ -260,8 +334,11 @@ const TODO = () => {
         <Toolbar
           sx={{
             display: "flex",
+
             alignItems: "center",
+
             py: { xs: 1.5, sm: 1 },
+
             gap: 2,
           }}
         >
@@ -269,7 +346,9 @@ const TODO = () => {
             variant={isMobile ? "h6" : "h5"}
             sx={{
               fontWeight: 600,
+
               mr: { xs: 1, md: 3 },
+
               flexShrink: 0,
             }}
           >
@@ -279,24 +358,37 @@ const TODO = () => {
           <Box
             sx={{
               display: "flex",
+
               alignItems: "center",
+
               gap: { xs: 1, sm: 2 },
+
               width: "100%",
+
               justifyContent: "flex-end",
+
               flexWrap: isMobile ? "wrap" : "nowrap",
             }}
           >
             {/* Uncompleted tasks counter */}
+
             <Box
               sx={{
                 display: "flex",
+
                 alignItems: "center",
+
                 py: 0.75,
+
                 px: 1.5,
+
                 borderRadius: 2,
+
                 backgroundColor: alpha(isDarkMode ? "#fff" : "#000", 0.1),
+
                 border: `1px solid ${alpha(
                   isDarkMode ? "#fff" : "#000",
+
                   0.12
                 )}`,
               }}
@@ -305,25 +397,32 @@ const TODO = () => {
                 fontSize="small"
                 sx={{
                   mr: 0.75,
+
                   color: isDarkMode ? "rgba(255, 255, 255, 0.9)" : "white",
                 }}
               />
+
               <Typography
                 variant="body2"
                 sx={{
                   color: isDarkMode ? "rgba(255, 255, 255, 0.9)" : "white",
+
                   fontWeight: 500,
+
                   mr: 0.5,
+
                   display: { xs: "none", sm: "block" },
                 }}
               >
                 Tasks:
               </Typography>
+
               <Typography
                 variant="body2"
                 component="span"
                 sx={{
                   fontWeight: 700,
+
                   color: isDarkMode ? "rgba(255, 255, 255, 0.9)" : "white",
                 }}
               >
@@ -332,20 +431,27 @@ const TODO = () => {
             </Box>
 
             {/* Priority filter */}
+
             <FormControl
               size="small"
               sx={{
                 minWidth: { xs: 110, sm: 140 },
+
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
+
                   backgroundColor: alpha(isDarkMode ? "#fff" : "#000", 0.05),
+
                   border: `1px solid ${alpha(
                     isDarkMode ? "#fff" : "#000",
+
                     0.15
                   )}`,
+
                   "&:hover": {
                     borderColor: alpha(isDarkMode ? "#fff" : "#000", 0.25),
                   },
+
                   "& fieldset": {
                     border: "none",
                   },
@@ -362,13 +468,16 @@ const TODO = () => {
                     fontSize="small"
                     sx={{
                       mr: 1,
+
                       color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "white",
                     }}
                   />
                 }
                 sx={{
                   color: isDarkMode ? "rgba(255, 255, 255, 0.9)" : "white",
+
                   fontSize: "0.875rem",
+
                   "& .MuiSelect-icon": {
                     color: isDarkMode ? "rgba(255, 255, 255, 0.7)" : "white",
                   },
@@ -377,35 +486,49 @@ const TODO = () => {
                   PaperProps: {
                     sx: {
                       mt: 0.5,
+
                       boxShadow: theme.shadows[3],
+
                       borderRadius: 1,
                     },
                   },
                 }}
               >
                 <MenuItem value="All">All Priorities</MenuItem>
+
                 <MenuItem value="Top">Top Priority</MenuItem>
+
                 <MenuItem value="Moderate">Moderate</MenuItem>
+
                 <MenuItem value="Low">Low Priority</MenuItem>
               </Select>
             </FormControl>
 
             {/* Add task button */}
+
             <Button
               variant="contained"
               onClick={handleOpenForm}
               startIcon={<AddIcon />}
               sx={{
                 backgroundColor: isDarkMode ? alpha("#fff", 0.15) : "white",
+
                 color: isDarkMode ? "white" : theme.palette.primary.main,
+
                 whiteSpace: "nowrap",
+
                 px: 2,
+
                 borderRadius: 2,
+
                 border: isDarkMode ? `1px solid ${alpha("#fff", 0.2)}` : "none",
+
                 "&:hover": {
                   backgroundColor: isDarkMode ? alpha("#fff", 0.25) : "#e0e0e0",
+
                   boxShadow: theme.shadows[2],
                 },
+
                 fontWeight: 600,
               }}
             >
@@ -418,11 +541,16 @@ const TODO = () => {
       <Container
         sx={{
           mt: 4,
+
           px: isMobile ? 1 : 3,
+
           maxWidth: {
             xs: "100%",
+
             sm: "100%",
+
             md: "90%",
+
             lg: "90%",
           },
         }}
@@ -437,6 +565,7 @@ const TODO = () => {
                 ? "No tasks yet. Add your first task to get started!"
                 : "No tasks match the selected priority filter."}
             </Typography>
+
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -454,13 +583,19 @@ const TODO = () => {
                 elevation={1}
                 sx={{
                   mb: 4,
+
                   borderRadius: 2,
+
                   overflow: "hidden",
+
                   transition: "all 0.2s",
+
                   opacity: todo.completed ? 0.5 : 1,
+
                   borderTop: `3px solid ${
                     priorityColors[todo.priority]?.border || "transparent"
                   }`,
+
                   "&:hover": {
                     boxShadow: 3,
                   },
@@ -471,8 +606,10 @@ const TODO = () => {
                     expandIcon={<ExpandMoreIcon />}
                     sx={{
                       padding: "10px",
+
                       "& .MuiAccordionSummary-content": {
                         margin: "12px 0",
+
                         display: "flex",
                       },
                     }}
@@ -480,8 +617,11 @@ const TODO = () => {
                     <Box
                       sx={{
                         display: "flex",
+
                         alignItems: "center",
+
                         width: "100%",
+
                         gap: 1,
                       }}
                     >
@@ -489,6 +629,7 @@ const TODO = () => {
                         checked={todo.completed}
                         onChange={(e) => {
                           e.stopPropagation();
+
                           handleToggleComplete(todo._id, e.target.checked);
                         }}
                         onClick={(e) => e.stopPropagation()}
@@ -499,10 +640,13 @@ const TODO = () => {
                         variant="subtitle1"
                         sx={{
                           fontWeight: 500,
+
                           flex: 1,
+
                           textDecoration: todo.completed
                             ? "line-through"
                             : "none",
+
                           color: todo.completed
                             ? "text.secondary"
                             : "text.primary",
@@ -515,6 +659,7 @@ const TODO = () => {
                         sx={{ display: "flex", alignItems: "center", gap: 1 }}
                       >
                         <EventIcon fontSize="small" color="action" />
+
                         <Typography
                           variant={isMobile ? "caption" : "body2"}
                           sx={{ margin: "0px 20px 0px 0px" }}
@@ -524,12 +669,15 @@ const TODO = () => {
                       </Box>
                     </Box>
                   </AccordionSummary>
+
                   <Divider />
+
                   <AccordionDetails sx={{ textAlign: "left" }}>
                     <Typography
                       variant="caption"
                       sx={{
                         fontStyle: "italic",
+
                         color: "grey.600",
                       }}
                     >
@@ -548,10 +696,13 @@ const TODO = () => {
                     >
                       {todo.description || "No description provided."}
                     </Typography>
+
                     <Box
                       sx={{
                         display: "flex",
+
                         gap: 1,
+
                         justifyContent: "flex-end",
                       }}
                     >
@@ -563,6 +714,7 @@ const TODO = () => {
                       >
                         {isMobile ? "" : "Edit"}
                       </Button>
+
                       <Button
                         variant="outlined"
                         size="small"
@@ -589,6 +741,7 @@ const TODO = () => {
           <DialogTitle sx={{ pb: 1 }}>
             {editMode ? "Edit Task" : "Add New Task"}
           </DialogTitle>
+
           <form onSubmit={handleSubmit}>
             <DialogContent sx={{ pb: 2 }}>
               <TextField
@@ -603,7 +756,9 @@ const TODO = () => {
                 variant="outlined"
                 sx={{ mb: 2 }}
               />
+
               {/* Description is now optional */}
+
               <TextField
                 margin="dense"
                 label="Description"
@@ -616,6 +771,7 @@ const TODO = () => {
                 rows={3}
                 sx={{ mb: 2 }}
               />
+
               <TextField
                 margin="dense"
                 label="Priority"
@@ -630,9 +786,12 @@ const TODO = () => {
                 sx={{ mb: 2 }}
               >
                 <option value="Top">Top</option>
+
                 <option value="Moderate">Moderate</option>
+
                 <option value="Low">Low</option>
               </TextField>
+
               <TextField
                 margin="dense"
                 label="Date"
@@ -646,11 +805,14 @@ const TODO = () => {
                 variant="outlined"
                 sx={{ mb: 2 }}
               />
+
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Box
                   sx={{
                     display: "flex",
+
                     gap: 2,
+
                     flexDirection: isMobile ? "column" : "row",
                   }}
                 >
@@ -665,6 +827,7 @@ const TODO = () => {
                     ampm={true}
                     sx={{ flex: 1 }}
                   />
+
                   <TimePicker
                     label="End Time"
                     value={
@@ -677,10 +840,12 @@ const TODO = () => {
                 </Box>
               </LocalizationProvider>
             </DialogContent>
+
             <DialogActions sx={{ px: 3, pb: 2 }}>
               <Button onClick={() => setOpen(false)} variant="outlined">
                 Cancel
               </Button>
+
               <Button
                 type="submit"
                 variant="contained"
