@@ -25,10 +25,6 @@ const useConversationStore = create((set) => ({
       );
       return { conversations: updatedConversations };
     }),
-  addNewMessage: (newMessage) => {
-    // Optionally handle new message addition if needed
-    // For now, just refetch conversations or update state accordingly
-  },
 }));
 
 export default useConversationStore;

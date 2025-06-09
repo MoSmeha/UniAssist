@@ -17,7 +17,8 @@ import DateRangeIcon from "@mui/icons-material/DateRange";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import LayersIcon from "@mui/icons-material/Layers";
 import AnnouncementIcon from "@mui/icons-material/Announcement";
-import SmartToyIcon from "@mui/icons-material/SmartToy";
+import DeviceUnknownIcon from "@mui/icons-material/DeviceUnknown";
+import AssistantIcon from "@mui/icons-material/Assistant";
 
 import { AccountPreview } from "@toolpad/core/Account";
 import { AppProvider } from "@toolpad/core/AppProvider";
@@ -166,8 +167,8 @@ function DashboardLayoutBasic({ window }) {
     { segment: "staffList", title: "Staff List", icon: <RecentActorsIcon /> },
     {
       segment: "Lost&Found",
-      title: "Lost&Found",
-      icon: <RecentActorsIcon />,
+      title: "Lost & Found",
+      icon: <DeviceUnknownIcon />,
     },
     { segment: "Schedule", title: "Schedule", icon: <DateRangeIcon /> },
     {
@@ -183,7 +184,7 @@ function DashboardLayoutBasic({ window }) {
       icon: <ConstructionIcon />,
       children: [
         { segment: "checkList", title: "Checklist", icon: <ChecklistIcon /> },
-        { segment: "AIBot", title: "AI ChatBot", icon: <SmartToyIcon /> },
+        { segment: "AIBot", title: "AI ChatBot", icon: <AssistantIcon /> },
       ],
     },
     { kind: "divider" },

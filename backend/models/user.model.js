@@ -7,8 +7,8 @@ const ScheduleSchema = new mongoose.Schema({
     required: true,
   },
   subject: { type: String, required: true, enum: Subjects },
-  startTime: { type: String, required: true }, // e.g., "09:00 AM"
-  endTime: { type: String, required: true }, // e.g., "10:30 AM"
+  startTime: { type: String, required: true },
+  endTime: { type: String, required: true },
   mode: {
     type: String,
     enum: ["campus", "online"],
@@ -41,7 +41,7 @@ const UserSchema = new mongoose.Schema(
 const User = mongoose.model("User", UserSchema);
 
 const TeacherSchema = new mongoose.Schema({
-  title: { type: String, required: true }, // e.g., "Head of Engineering"
+  title: { type: String, required: true },
 });
 
 const Teacher = User.discriminator("teacher", TeacherSchema);

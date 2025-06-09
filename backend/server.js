@@ -29,7 +29,7 @@ app.use("/api/sch", scheduleRoutes);
 app.use("/api/todo", todoRoutes);
 app.use("/api/announcements", annonncementRoutes);
 app.use("/api/chatbot", openaiRoutes);
-app.use("/api/lost&found", LostAndFoundRoutes);
+app.use("/api/lost-and-found", LostAndFoundRoutes);
 
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
 

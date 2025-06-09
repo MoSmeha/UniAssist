@@ -1,10 +1,10 @@
-// Message.jsx
+import { forwardRef } from "react";
 import { Box, Typography, Avatar } from "@mui/material";
 import { useAuthStore } from "../../zustand/AuthStore";
 import { extractTime } from "../../utils/extractTime";
 import useConversation from "../../zustand/useConversation";
 
-const Message = ({ message }) => {
+const Message = forwardRef(({ message }, ref) => {
   const authUser = useAuthStore((state) => state.authUser);
   const { selectedConversation } = useConversation();
   const fromMe = message.senderId === authUser._id;
@@ -13,11 +13,11 @@ const Message = ({ message }) => {
     ? authUser.profilePic
     : selectedConversation?.profilePic;
 
-  // Determine if message is unread for current user
   const isUnread = !fromMe && !message.read;
 
   return (
     <Box
+      ref={ref}
       sx={{
         display: "flex",
         alignItems: "flex-start",
@@ -47,7 +47,7 @@ const Message = ({ message }) => {
         <Box
           sx={{
             backgroundColor: isUnread
-              ? "#e0e0e0" // Light blue for unread messages
+              ? "#e0e0e0"
               : fromMe
               ? "#0084ff"
               : "#ffffff",
@@ -89,6 +89,8 @@ const Message = ({ message }) => {
       )}
     </Box>
   );
-};
+});
+
+Message.displayName = "Message";
 
 export default Message;

@@ -25,10 +25,13 @@ const FilterControls = () => {
   };
 
   return (
-    <Box component="form" noValidate autoComplete="off" mb={4}>
-      <Grid container spacing={2}>
+    <Box component="form" noValidate autoComplete="off" mb={2}>
+      {/* Compact margin-bottom */}
+      <Grid container spacing={1}>
+        {/* Compact spacing between items */}
         <Grid item xs={12} sm={4}>
-          <FormControl fullWidth>
+          <FormControl fullWidth size="small">
+            {/* Small size for vertical compactness */}
             <InputLabel>Type</InputLabel>
             <Select
               name="type"
@@ -45,7 +48,9 @@ const FilterControls = () => {
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <FormControl fullWidth>
+          <FormControl fullWidth size="small">
+            {" "}
+            {/* Small size for vertical compactness */}
             <InputLabel>Category</InputLabel>
             <Select
               name="category"
@@ -65,7 +70,9 @@ const FilterControls = () => {
           </FormControl>
         </Grid>
         <Grid item xs={12} sm={4}>
-          <FormControl fullWidth>
+          <FormControl fullWidth size="small">
+            {" "}
+            {/* Small size for vertical compactness */}
             <InputLabel>Status</InputLabel>
             <Select
               name="resolved"

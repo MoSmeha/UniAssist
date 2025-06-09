@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 // Assume your API is running on this base URL
-const API_BASE_URL = "api/lost&found"; // Adjust if needed
+const API_BASE_URL = "api/lost-and-found"; // Adjust if needed
 
 // Helper function to handle API requests
 const apiFetch = async (url, options = {}) => {
@@ -120,11 +120,10 @@ export const useLostAndFoundStore = create((set, get) => ({
     }
   },
 
-  // Update an item's resolved status
   updateResolvedStatus: async (itemId, resolved) => {
     set({ loading: true, error: null });
     try {
-      const updatedItem = await apiFetch(`${API_BASE_URL}/${itemId}/resolved`, {
+      const updatedItem = await apiFetch(`${API_BASE_URL}/${itemId}/resolve`, {
         method: "PATCH",
         body: JSON.stringify({ resolved }),
       });
