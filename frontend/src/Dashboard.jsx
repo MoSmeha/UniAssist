@@ -19,6 +19,7 @@ import LayersIcon from "@mui/icons-material/Layers";
 import AnnouncementIcon from "@mui/icons-material/Announcement";
 import DeviceUnknownIcon from "@mui/icons-material/DeviceUnknown";
 import AssistantIcon from "@mui/icons-material/Assistant";
+import ClassIcon from "@mui/icons-material/Class";
 
 import { AccountPreview } from "@toolpad/core/Account";
 import { AppProvider } from "@toolpad/core/AppProvider";
@@ -36,6 +37,8 @@ import StaffList from "./pages/StaffInfo/StaffList";
 import Announcements from "./pages/Announcement/Announcements";
 import ChatbotFrontend from "./Chatbot";
 import LostAndFoundPage from "./pages/Lost&Found/LostAndFoundPage";
+
+import NotesApp from "./pages/NoteApp/NotesApp";
 
 import useConversationStore from "./zustand/useConversationStore";
 
@@ -61,6 +64,8 @@ const routes = {
   "/staffList": <StaffList />,
   "/Schedule": <ScheduleTable />,
   "/tools/checkList": <TODO />,
+  "/tools/NoteApp": <NotesApp />,
+
   "/announcements": <Announcements />,
   "/tools/AIBot": <ChatbotFrontend />,
   "/SignUp": <SignUp />,
@@ -185,6 +190,7 @@ function DashboardLayoutBasic({ window }) {
       children: [
         { segment: "checkList", title: "Checklist", icon: <ChecklistIcon /> },
         { segment: "AIBot", title: "AI ChatBot", icon: <AssistantIcon /> },
+        { segment: "NoteApp", title: "Note App", icon: <ClassIcon /> },
       ],
     },
     { kind: "divider" },
