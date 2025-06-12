@@ -59,12 +59,9 @@ const ItemCard = React.memo(function ItemCard({ item }) {
 
   // Function for handling chat initiation
   const handleChat = () => {
-    // Implement your chat functionality here.
     console.log(
       `Initiating chat with ${item.postedBy.firstName} for item: ${item.title}`
     );
-    // Example: You might use a router to navigate:
-    // navigate(`/chat/${item.postedBy._id}`);
   };
 
   return (
@@ -85,6 +82,8 @@ const ItemCard = React.memo(function ItemCard({ item }) {
             boxShadow: theme.shadows[6],
           },
           position: "relative",
+
+          maxWidth: 380,
         }}
       >
         <Box sx={{ position: "relative", height: 200, overflow: "hidden" }}>
@@ -152,7 +151,7 @@ const ItemCard = React.memo(function ItemCard({ item }) {
             <Box display="flex" flexWrap="wrap" gap={2} mt={0.5}>
               <Box display="flex" alignItems="center">
                 <CategoryIcon fontSize="small" color="info" sx={{ mr: 0.5 }} />
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary">
                   {item.category}
                 </Typography>
               </Box>
@@ -162,7 +161,7 @@ const ItemCard = React.memo(function ItemCard({ item }) {
                   color="info"
                   sx={{ mr: 0.5 }}
                 />
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="caption" color="text.secondary">
                   {item.location}
                 </Typography>
               </Box>

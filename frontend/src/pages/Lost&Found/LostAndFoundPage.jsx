@@ -72,7 +72,7 @@ const LostAndFoundPage = () => {
         </Toolbar>
       </AppBar>
 
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+      <Container maxWidth="xlg" sx={{ mt: 4, mb: 4 }}>
         <FilterControls />
 
         {loading && (

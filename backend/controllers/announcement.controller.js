@@ -25,7 +25,7 @@ export const createAnnouncement = async (req, res) => {
     const newAnnouncement = new Announcement({
       title,
       content,
-      sender: req.user.id, // Assuming you have authentication middleware that adds user to req
+      sender: req.user.id,
       announcementType,
       targetMajor,
       targetSubject,
@@ -39,7 +39,7 @@ export const createAnnouncement = async (req, res) => {
       message: "Announcement created successfully",
     });
   } catch (error) {
-    console.error("Error creating announcement:", error); // <-- Log full error
+    console.error("Error creating announcement:", error);
     res.status(500).json({
       success: false,
       message: "Failed to create announcement",
@@ -51,7 +51,7 @@ export const createAnnouncement = async (req, res) => {
 // Get all announcements relevant to a specific student
 export const getAnnouncementsForStudent = async (req, res) => {
   try {
-    const studentId = req.user.id; // Assuming authentication middleware
+    const studentId = req.user.id;
 
     // Get the student details
     const student = await Student.findById(studentId);

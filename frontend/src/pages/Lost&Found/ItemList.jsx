@@ -19,7 +19,7 @@ const ItemList = () => {
   return (
     <Grid container spacing={3}>
       {items.map((item) => (
-        <Grid item key={item._id} xs={12} sm={6} md={4}>
+        <Grid item key={item._id} xs={12} sm={6} md={6} lg={4}>
           <ItemCard item={item} />
         </Grid>
       ))}

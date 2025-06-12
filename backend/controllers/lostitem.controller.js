@@ -55,7 +55,7 @@ export const createLostAndFoundItem = async (req, res) => {
   }
 };
 
-// Get all Lost and Found items (with optional filtering & pagination)
+// Get all Lost and Found items
 export const getLostAndFoundItems = async (req, res) => {
   try {
     // Optional query parameters: type, category, resolved, page, limit

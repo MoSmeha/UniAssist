@@ -12,9 +12,9 @@ export const signup = async (req, res) => {
       password,
       gender,
       role,
-      Department, // Required for all users
-      title, // Teacher-specific
-      major, // Student-specific
+      Department,
+      title,
+      major,
       schedule,
     } = req.body;
 
@@ -45,6 +45,7 @@ export const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Generate profile picture
+    // heda api bye5la2 l pfp men l usrename, and this is just coloring i t
     function getLightColor() {
       const r = Math.floor(Math.random() * 106) + 150; // 150-255
       const g = Math.floor(Math.random() * 106) + 150;

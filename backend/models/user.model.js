@@ -34,6 +34,10 @@ const UserSchema = new mongoose.Schema(
       enum: Departments,
     },
     schedule: [ScheduleSchema],
+    pomodoroStats: {
+      totalSessions: { type: Number, default: 0 },
+      totalMinutes: { type: Number, default: 0 },
+    },
   },
   options
 );
@@ -52,6 +56,18 @@ const StudentSchema = new mongoose.Schema({
     required: true,
     enum: Majors,
   },
+  badges: [
+    {
+      type: String,
+      enum: [
+        "starter", // Focus Initiate (5 sessions)
+        "amateur", // Task Climber (20 sessions)
+        "pro", // Flow Achiever (50 sessions)
+        "master", // Deep Work Devotee (100 sessions)
+        "weekend_machine", // Weekend Warrior (any weekend session)
+      ],
+    },
+  ],
 });
 
 const Student = User.discriminator("student", StudentSchema);
