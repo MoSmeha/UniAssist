@@ -1,5 +1,5 @@
 // MessageInput.js
-import React, { useState } from "react";
+import { useState } from "react";
 import { Box, TextField, IconButton, CircularProgress } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import useSendMessage from "../../hooks/useSendMessage";

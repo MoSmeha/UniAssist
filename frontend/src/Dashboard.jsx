@@ -20,6 +20,7 @@ import AnnouncementIcon from "@mui/icons-material/Announcement";
 import DeviceUnknownIcon from "@mui/icons-material/DeviceUnknown";
 import AssistantIcon from "@mui/icons-material/Assistant";
 import ClassIcon from "@mui/icons-material/Class";
+import TimerIcon from "@mui/icons-material/Timer";
 
 import { AccountPreview } from "@toolpad/core/Account";
 import { AppProvider } from "@toolpad/core/AppProvider";
@@ -37,7 +38,7 @@ import StaffList from "./pages/StaffInfo/StaffList";
 import Announcements from "./pages/Announcement/Announcements";
 import ChatbotFrontend from "./Chatbot";
 import LostAndFoundPage from "./pages/Lost&Found/LostAndFoundPage";
-
+import PomodoroTimer from "./pages/Pomodoro/Pomodoro";
 import NotesApp from "./pages/NoteApp/NotesApp";
 
 import useConversationStore from "./zustand/useConversationStore";
@@ -65,6 +66,7 @@ const routes = {
   "/Schedule": <ScheduleTable />,
   "/tools/checkList": <TODO />,
   "/tools/NoteApp": <NotesApp />,
+  "/tools/Pomodoro": <PomodoroTimer />,
 
   "/announcements": <Announcements />,
   "/tools/AIBot": <ChatbotFrontend />,
@@ -191,6 +193,7 @@ function DashboardLayoutBasic({ window }) {
         { segment: "checkList", title: "Checklist", icon: <ChecklistIcon /> },
         { segment: "AIBot", title: "AI ChatBot", icon: <AssistantIcon /> },
         { segment: "NoteApp", title: "Note App", icon: <ClassIcon /> },
+        { segment: "Pomodoro", title: "Pomodoro", icon: <TimerIcon /> },
       ],
     },
     { kind: "divider" },

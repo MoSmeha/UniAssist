@@ -20,3 +20,40 @@ export const Departments = [
   "Public Health",
   "Administration",
 ];
+
+export const BADGES = [
+  {
+    id: "starter",
+    name: "Focus Initiate",
+    description: "Completed 5 Pomodoros",
+    threshold: 5,
+  },
+  {
+    id: "amateur",
+    name: "Task Climber",
+    description: "Completed 20 Pomodoros",
+    threshold: 20,
+  },
+  {
+    id: "pro",
+    name: "Flow Achiever",
+    description: "Completed 50 Pomodoros",
+    threshold: 50,
+  },
+  {
+    id: "master",
+    name: "Deep Work Devotee",
+    description: "Completed 100 Pomodoros",
+    threshold: 100,
+  },
+  {
+    id: "weekend_machine",
+    name: "Weekend Warrior",
+    description: "Completed a Pomodoro session on the weekend",
+    // weekend sessions have no threshold; handled by condition
+    condition: (session) => {
+      const day = new Date(session.timestamp).getDay(); // 0 = Sunday, 6 = Saturday
+      return day === 0 || day === 6;
+    },
+  },
+];

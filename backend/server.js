@@ -10,10 +10,11 @@ import scheduleRoutes from "./routes/schedule.routes.js";
 import connectToMongoDB from "./db/connectToMongoDB.js";
 import todoRoutes from "./routes/todo.routes.js";
 import annonncementRoutes from "./routes/announcements.routes.js";
-import openaiRoutes from "./routes/chatbot.routes.js";
+import chatbotRoutes from "./routes/chatbot.routes.js";
 import LostAndFoundRoutes from "./routes/lost.routes.js";
 import NoteAppRoutes from "./routes/note.routes.js";
-// Import lost and found routes
+import PomodoroRoutes from "./routes/pomodoro.routes.js";
+
 import { app, server } from "./socket/socket.js";
 
 dotenv.config();
@@ -30,9 +31,10 @@ app.use("/api/users", userRoutes);
 app.use("/api/sch", scheduleRoutes);
 app.use("/api/todo", todoRoutes);
 app.use("/api/announcements", annonncementRoutes);
-app.use("/api/chatbot", openaiRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/lost-and-found", LostAndFoundRoutes);
 app.use("/api/notes", NoteAppRoutes);
+app.use("/api/pomodoro", PomodoroRoutes);
 // Import note app routes
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
 

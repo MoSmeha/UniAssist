@@ -1,6 +1,13 @@
-import { chatbot } from "../controllers/OpenAi.controller.js";
 import express from "express";
-
 const router = express.Router();
-router.get("/gpt/:pp/:prompt", chatbot);
+import {
+  getBuildingInfo,
+  getFloors,
+  getFloorDetails,
+} from "../controllers/Chatbot.controller.js";
+
+router.post("/ask", getBuildingInfo);
+router.get("/floors", getFloors);
+router.get("/floor/:floor", getFloorDetails);
+
 export default router;

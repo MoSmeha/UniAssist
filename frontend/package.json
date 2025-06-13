@@ -20,6 +20,7 @@
     "chat-app-yt": "file:..",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
+    "howler": "^2.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot": "^0.0.1",

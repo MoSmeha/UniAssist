@@ -83,7 +83,7 @@ const NotesApp = () => {
           pb: 4,
           px: { xs: 2, sm: 3, md: 4 },
           position: "relative",
-          maxWidth: "1400px", // Limit max width for better readability
+          maxWidth: "1400px",
         }}
       >
         {error && (

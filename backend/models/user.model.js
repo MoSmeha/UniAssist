@@ -36,7 +36,7 @@ const UserSchema = new mongoose.Schema(
     schedule: [ScheduleSchema],
     pomodoroStats: {
       totalSessions: { type: Number, default: 0 },
-      totalMinutes: { type: Number, default: 0 },
+      totalHours: { type: Number, default: 0 },
     },
   },
   options

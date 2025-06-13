@@ -148,7 +148,7 @@ const ItemCard = React.memo(function ItemCard({ item }) {
             </Typography>
 
             {/* Category, Location & Timestamp */}
-            <Box display="flex" flexWrap="wrap" gap={2} mt={0.5}>
+            <Box display="flex" flexWrap="wrap" gap={2.5} mt={0.5}>
               <Box display="flex" alignItems="center">
                 <CategoryIcon fontSize="small" color="info" sx={{ mr: 0.5 }} />
                 <Typography variant="caption" color="text.secondary">
