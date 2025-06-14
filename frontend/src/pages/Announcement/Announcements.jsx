@@ -36,10 +36,16 @@ const Announcements = () => {
   const fetchAnnouncements = async () => {
     try {
       setLoading(true);
-      const endpoint =
-        authUser.role === "student"
-          ? "/api/announcements/student"
-          : "/api/announcements/teacher";
+     let endpoint;
+     if (authUser.role === "student") {
+       endpoint = "/api/announcements/student";
+     } else if (authUser.role === "teacher") {
+       endpoint = "/api/announcements/teacher";
+     } else if (authUser.role === "admin") {
+       endpoint = "/api/announcements/admin";
+     } else {
+       throw new Error("Unknown role");
+     }
 
       const response = await fetch(endpoint, {
         credentials: "include",
@@ -99,7 +105,7 @@ const Announcements = () => {
               ? "Announcements:"
               : "Your Announcements"}
           </Typography>
-          {authUser.role === "teacher" && (
+          {(authUser.role === "teacher" || authUser.role === "admin") && (
             <Button
               color="inherit"
               variant="outlined"

@@ -148,3 +148,28 @@ export const deleteAnnouncement = async (req, res) => {
     });
   }
 };
+
+export const getAllAnnouncements = async (req, res) => {
+  try {
+    // no filters — just grab everything
+    const announcements = await Announcement.find({})
+      .sort({ createdAt: -1 })
+      .populate(
+        "sender",
+        "firstName lastName profilePic Department title createdAt"
+      );
+
+    res.status(200).json({
+      success: true,
+      count: announcements.length,
+      announcements,
+    });
+  } catch (error) {
+    console.error("Error fetching all announcements:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch announcements",
+      error: error.message,
+    });
+  }
+};

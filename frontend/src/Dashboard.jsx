@@ -5,7 +5,7 @@ import { createTheme } from "@mui/material/styles";
 import Stack from "@mui/material/Stack";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import Chip from "@mui/material/Chip"; // Import Chip
+import Chip from "@mui/material/Chip";
 
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import ChatIcon from "@mui/icons-material/Chat";
@@ -22,13 +22,19 @@ import AssistantIcon from "@mui/icons-material/Assistant";
 import ClassIcon from "@mui/icons-material/Class";
 import TimerIcon from "@mui/icons-material/Timer";
 
+import Badge from "@mui/material/Badge";
+import NotificationsIcon from "@mui/icons-material/Notifications";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+
 import { AccountPreview } from "@toolpad/core/Account";
 import { AppProvider } from "@toolpad/core/AppProvider";
-import { DashboardLayout } from "@toolpad/core/DashboardLayout";
+import { DashboardLayout, ThemeSwitcher } from "@toolpad/core/DashboardLayout"; // Import ThemeSwitcher
 import { useDemoRouter } from "@toolpad/core/internal";
 
 import { useAuthStore } from "./zustand/AuthStore";
 import useLogout from "./hooks/useLogout";
+import useConversationStore from "./zustand/useConversationStore";
 
 import ChatApp from "./pages/ChatApp/ChatApp";
 import SignUp from "./pages/signup/SignUp";
@@ -40,26 +46,16 @@ import ChatbotFrontend from "./Chatbot";
 import LostAndFoundPage from "./pages/Lost&Found/LostAndFoundPage";
 import PomodoroTimer from "./pages/Pomodoro/Pomodoro";
 import NotesApp from "./pages/NoteApp/NotesApp";
-
-import useConversationStore from "./zustand/useConversationStore";
+import React from "react";
 
 const demoTheme = createTheme({
-  cssVariables: {
-    colorSchemeSelector: "data-toolpad-color-scheme",
-  },
+  cssVariables: { colorSchemeSelector: "data-toolpad-color-scheme" },
   colorSchemes: { light: true, dark: true },
   breakpoints: {
-    values: {
-      xs: 0,
-      sm: 600,
-      md: 600,
-      lg: 1200,
-      xl: 1536,
-    },
+    values: { xs: 0, sm: 600, md: 600, lg: 1200, xl: 1536 },
   },
 });
 
-// Pages rendered based on route
 const routes = {
   "/Chat": <ChatApp />,
   "/staffList": <StaffList />,
@@ -67,7 +63,6 @@ const routes = {
   "/tools/checkList": <TODO />,
   "/tools/NoteApp": <NotesApp />,
   "/tools/Pomodoro": <PomodoroTimer />,
-
   "/announcements": <Announcements />,
   "/tools/AIBot": <ChatbotFrontend />,
   "/SignUp": <SignUp />,
@@ -92,10 +87,7 @@ function DemoPageContent({ pathname }) {
     </Box>
   );
 }
-
-DemoPageContent.propTypes = {
-  pathname: PropTypes.string.isRequired,
-};
+DemoPageContent.propTypes = { pathname: PropTypes.string.isRequired };
 
 function SidebarFooterProfile({ mini }) {
   const { logout, loading } = useLogout();
@@ -127,10 +119,7 @@ function SidebarFooterProfile({ mini }) {
             sx={{
               mr: 1,
               color: "text.secondary",
-              "&:hover": {
-                color: "error.main",
-              },
-              opacity: 1,
+              "&:hover": { color: "error.main" },
             }}
           >
             <LogoutIcon />
@@ -140,24 +129,57 @@ function SidebarFooterProfile({ mini }) {
     </Stack>
   );
 }
+SidebarFooterProfile.propTypes = { mini: PropTypes.bool.isRequired };
 
-SidebarFooterProfile.propTypes = {
-  mini: PropTypes.bool.isRequired,
-};
+function NotificationsMenu() {
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
+  const notifications = [
+    "New user signed up",
+    "Server CPU usage high",
+    "You have 3 unread messages",
+  ];
+
+  const handleClick = (e) => setAnchorEl(e.currentTarget);
+  const handleClose = () => setAnchorEl(null);
+
+  return (
+    <>
+      <IconButton color="inherit" onClick={handleClick} size="large">
+        <Badge badgeContent={notifications.length} color="error">
+          <NotificationsIcon />
+        </Badge>
+      </IconButton>
+      <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
+        {notifications.map((note, i) => (
+          <MenuItem key={i} onClick={handleClose}>
+            {note}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
+}
+
+// Updated component for toolbar actions - AccountPreview removed
+function ToolbarActionsWithNotifications() {
+  return (
+    <Stack direction="row" alignItems="center" spacing={1}>
+      <NotificationsMenu />
+      <ThemeSwitcher />
+    </Stack>
+  );
+}
 
 function DashboardLayoutBasic({ window }) {
   const router = useDemoRouter("/dashboard");
   const demoWindow = window !== undefined ? window() : undefined;
   const authUser = useAuthStore((state) => state.authUser);
-
   const conversations = useConversationStore((state) => state.conversations);
-
-  // Calculate total unread messages by summing unreadCount from all conversations
   const unreadChatMessages = conversations
-    ? conversations.reduce((total, conv) => total + (conv.unreadCount || 0), 0)
+    ? conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0)
     : 0;
 
-  // Immutable navigation logic
   const baseNavigation = [
     { kind: "header", title: "Main items" },
     { segment: "dashboard", title: "Dashboard", icon: <DashboardIcon /> },
@@ -165,7 +187,6 @@ function DashboardLayoutBasic({ window }) {
       segment: "Chat",
       title: "Chat",
       icon: <ChatIcon />,
-      // Add the action property with a Chip component
       action:
         unreadChatMessages > 0 ? (
           <Chip label={unreadChatMessages} color="primary" size="small" />
@@ -208,7 +229,6 @@ function DashboardLayoutBasic({ window }) {
 
   const navigation = [...baseNavigation, ...adminNavigation];
 
-  // Authenticated user session
   const userSession = {
     user: {
       name:
@@ -243,7 +263,13 @@ function DashboardLayoutBasic({ window }) {
       window={demoWindow}
       session={userSession}
     >
-      <DashboardLayout slots={{ sidebarFooter: SidebarFooterProfile }}>
+      <DashboardLayout
+        slots={{
+          sidebarFooter: SidebarFooterProfile,
+          // Use toolbarActions to control the order of items in the toolbar
+          toolbarActions: ToolbarActionsWithNotifications,
+        }}
+      >
         <DemoPageContent pathname={router.pathname} />
       </DashboardLayout>
     </AppProvider>

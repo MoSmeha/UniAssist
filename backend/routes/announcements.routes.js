@@ -4,13 +4,14 @@ import {
   getAnnouncementsForStudent,
   getTeacherAnnouncements,
   deleteAnnouncement,
+  getAllAnnouncements, 
 } from "../controllers/announcement.controller.js";
 import protectRoute from "../middleware/protectRoute.js";
 import restrictTo from "../middleware/RoleRestriction.js";
 const router = express.Router();
 import { Subjects, Majors } from "../models/Constants.js";
 // Create a new announcement - only teachers can create announcements
-router.post("/", protectRoute, restrictTo("teacher"), createAnnouncement);
+router.post("/", protectRoute, restrictTo("teacher","admin"), createAnnouncement);
 
 // Get announcements relevant to the logged-in student
 router.get(
@@ -26,6 +27,13 @@ router.get(
   protectRoute,
   restrictTo("teacher"),
   getTeacherAnnouncements
+);
+
+router.get(
+  "/admin",
+  protectRoute,
+  restrictTo("admin"),
+  getAllAnnouncements
 );
 
 // Delete an announcement
