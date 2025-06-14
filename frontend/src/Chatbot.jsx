@@ -76,7 +76,7 @@ const Chatbot = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        height: "94vh",
+        minHeight: "91vh",
         width: "100%",
         // Use theme background for overall container
         backgroundColor: theme.palette.background.default,

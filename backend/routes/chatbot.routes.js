@@ -4,7 +4,7 @@ import {
   getBuildingInfo,
   getFloors,
   getFloorDetails,
-} from "../controllers/Chatbot.controller.js";
+} from "../controllers/chatbot.controller.js";
 
 router.post("/ask", getBuildingInfo);
 router.get("/floors", getFloors);
