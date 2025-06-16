@@ -4,7 +4,7 @@ import { BADGES } from "../models/Constants.js";
 // POST /api/pomodoro/session
 export async function recordSession(req, res) {
   try {
-    const userId = req.user.id; // assuming auth middleware sets req.user
+    const userId = req.user.id; 
     const { sessionMinutes } = req.body;
 
     if (!sessionMinutes || sessionMinutes <= 0) {

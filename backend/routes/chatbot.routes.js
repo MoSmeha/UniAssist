@@ -5,9 +5,9 @@ import {
   getFloors,
   getFloorDetails,
 } from "../controllers/chatbot.controller.js";
-
-router.post("/ask", getBuildingInfo);
-router.get("/floors", getFloors);
-router.get("/floor/:floor", getFloorDetails);
+import protectRoute from "../middleware/protectRoute.js";
+router.post("/ask",protectRoute, getBuildingInfo);
+router.get("/floors",protectRoute, getFloors);
+router.get("/floor/:floor",protectRoute, getFloorDetails);
 
 export default router;

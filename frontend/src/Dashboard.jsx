@@ -21,8 +21,9 @@ import DeviceUnknownIcon from "@mui/icons-material/DeviceUnknown";
 import AssistantIcon from "@mui/icons-material/Assistant";
 import ClassIcon from "@mui/icons-material/Class";
 import TimerIcon from "@mui/icons-material/Timer";
-
+import TodayIcon from '@mui/icons-material/Today';
 import Badge from "@mui/material/Badge";
+
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -42,10 +43,12 @@ import ScheduleTable from "./pages/Schedule/ScheduleComponent";
 import TODO from "./pages/TodoList/TodoList";
 import StaffList from "./pages/StaffInfo/StaffList";
 import Announcements from "./pages/Announcement/Announcements";
-import ChatbotFrontend from "./Chatbot";
+import ChatbotFrontend from "./pages/Chatbot/Chatbot";
 import LostAndFoundPage from "./pages/Lost&Found/LostAndFoundPage";
 import PomodoroTimer from "./pages/Pomodoro/Pomodoro";
 import NotesApp from "./pages/NoteApp/NotesApp";
+import AppointmentManager from "./pages/Appointment/Appointment";
+
 import React from "react";
 
 const demoTheme = createTheme({
@@ -66,7 +69,8 @@ const routes = {
   "/announcements": <Announcements />,
   "/tools/AIBot": <ChatbotFrontend />,
   "/SignUp": <SignUp />,
-  "/Lost&Found": <LostAndFoundPage />,
+  "/LostandFound": <LostAndFoundPage />,
+  "/appointmentBooking" : <AppointmentManager/>
 };
 
 function DemoPageContent({ pathname }) {
@@ -194,9 +198,14 @@ function DashboardLayoutBasic({ window }) {
     },
     { segment: "staffList", title: "Staff List", icon: <RecentActorsIcon /> },
     {
-      segment: "Lost&Found",
+      segment: "LostandFound",
       title: "Lost & Found",
       icon: <DeviceUnknownIcon />,
+    },
+    {
+      segment: "appointmentBooking",
+      title: "Appointments",
+      icon: <TodayIcon />,
     },
     { segment: "Schedule", title: "Schedule", icon: <DateRangeIcon /> },
     {

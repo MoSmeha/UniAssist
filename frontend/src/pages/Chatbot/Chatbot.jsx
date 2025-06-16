@@ -12,7 +12,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { Send, Person, SmartToy } from "@mui/icons-material";
-import { useAuthStore } from "./zustand/AuthStore";
+import { useAuthStore } from "../../zustand/AuthStore";
 
 const Chatbot = () => {
   const [question, setQuestion] = useState("");
