@@ -8,6 +8,11 @@ const AnnouncementSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  category: {
+    type:String, 
+    enum :["Exam", "Makeup Session", "Event" ,"Other"], 
+    required: true
+  },
   announcementType: {
     type: String,
     enum: ["major", "subject"],

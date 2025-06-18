@@ -30,7 +30,7 @@ import MenuItem from "@mui/material/MenuItem";
 
 import { AccountPreview } from "@toolpad/core/Account";
 import { AppProvider } from "@toolpad/core/AppProvider";
-import { DashboardLayout, ThemeSwitcher } from "@toolpad/core/DashboardLayout"; // Import ThemeSwitcher
+import { DashboardLayout, ThemeSwitcher } from "@toolpad/core/DashboardLayout";
 import { useDemoRouter } from "@toolpad/core/internal";
 
 import { useAuthStore } from "./zustand/AuthStore";
@@ -50,7 +50,7 @@ import NotesApp from "./pages/NoteApp/NotesApp";
 import AppointmentManager from "./pages/Appointment/Appointment";
 
 import React from "react";
-
+import { useSocketStore } from "./zustand/SocketStore";
 const demoTheme = createTheme({
   cssVariables: { colorSchemeSelector: "data-toolpad-color-scheme" },
   colorSchemes: { light: true, dark: true },
@@ -135,31 +135,58 @@ function SidebarFooterProfile({ mini }) {
 }
 SidebarFooterProfile.propTypes = { mini: PropTypes.bool.isRequired };
 
+// Somewhere at top:
+
+
 function NotificationsMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
-  const notifications = [
-    "New user signed up",
-    "Server CPU usage high",
-    "You have 3 unread messages",
-  ];
 
-  const handleClick = (e) => setAnchorEl(e.currentTarget);
+  const notifications    = useSocketStore((s) => s.notifications);
+  const { markAllRead }  = useSocketStore((s) => s.actions);
+
+  // only count unread
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const handleClick = (e) => {
+    setAnchorEl(e.currentTarget);
+
+    // as soon as menu opens, mark everything read
+    markAllRead();
+  };
   const handleClose = () => setAnchorEl(null);
 
   return (
     <>
       <IconButton color="inherit" onClick={handleClick} size="large">
-        <Badge badgeContent={notifications.length} color="error">
+        <Badge badgeContent={unreadCount} color="error">
           <NotificationsIcon />
         </Badge>
       </IconButton>
+
       <Menu anchorEl={anchorEl} open={open} onClose={handleClose}>
-        {notifications.map((note, i) => (
-          <MenuItem key={i} onClick={handleClose}>
-            {note}
-          </MenuItem>
-        ))}
+        {notifications.length === 0 && (
+          <MenuItem onClick={handleClose}>No notifications</MenuItem>
+        )}
+        {notifications.map((note, i) => {
+          const { markOneRead } = useSocketStore.getState().actions;
+          const handleNotificationClick = () => {
+            markOneRead(note._id);
+            handleClose();
+          };
+          return (
+            <MenuItem
+              key={i}
+              onClick={handleNotificationClick}
+              sx={{
+                backgroundColor: note.read ? "grey.100" : "inherit",
+                fontWeight: note.read ? "normal" : "bold",
+              }}
+            >
+              {note.message}
+            </MenuItem>
+          );
+        })}
       </Menu>
     </>
   );

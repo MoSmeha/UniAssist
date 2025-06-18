@@ -3,12 +3,14 @@ import { useAuthStore } from "./AuthStore";
 import { useSocketStore } from "./SocketStore";
 import useConversationStore from "./useConversationStore";
 import io from "socket.io-client";
+
 export const SocketManager = () => {
   const authUser = useAuthStore((state) => state.authUser);
   const { socket } = useSocketStore();
-  const { setSocket, setOnlineUsers } = useSocketStore(
+  const { setSocket, setOnlineUsers, addNotificationsBatch, setNotifications } = useSocketStore(
     (state) => state.actions
   );
+
 
   const fetchConversations = useConversationStore(
     (state) => state.fetchConversations
@@ -22,6 +24,27 @@ export const SocketManager = () => {
       // Fetch conversations once on mount to populate initial state
       fetchConversations();
 
+      // Fetch persisted notifications on login using fetch API
+      // Clear existing notifications before adding new batch to avoid duplicates
+      setNotifications([]);
+
+      fetch("/api/notifications", {
+        credentials: "include",
+        headers: {
+          Authorization: `Bearer ${authUser.token}`,
+          "Content-Type": "application/json",
+        },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data) {
+            addNotificationsBatch(data);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to fetch notifications:", err);
+        });
+
       const newSocket = io("http://localhost:5000", {
         query: {
           userId: authUser._id,
@@ -29,6 +52,15 @@ export const SocketManager = () => {
       });
 
       setSocket(newSocket);
+
+      newSocket.on("receiveNotification", (notification) => {
+        // push into our Zustand store
+        useSocketStore.getState().actions.addNotification(notification);
+
+        // if you also want to fire toasts immediately, you can do:
+        const event = new CustomEvent("socketNotification", { detail: notification });
+        window.dispatchEvent(event);
+      });
 
       newSocket.on("getOnlineUsers", (users) => {
         setOnlineUsers(users);
@@ -62,7 +94,7 @@ export const SocketManager = () => {
       socket.close();
       setSocket(null);
     }
-  }, [authUser, fetchConversations, updateUnreadCount]);
+  }, [authUser, fetchConversations, updateUnreadCount, addNotificationsBatch]);
 
   return null;
 };

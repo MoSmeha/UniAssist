@@ -16,6 +16,7 @@ const CreateAnnouncement = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
+    category: "", // Added category field
     announcementType: "",
     targetMajor: "",
     targetSubject: "",
@@ -27,6 +28,9 @@ const CreateAnnouncement = ({ onSuccess }) => {
   const [subjects, setSubjects] = useState([]);
 
   const { authUser } = useAuthStore();
+
+  // Define announcement categories
+  const categories = ["Exam", "Makeup Session", "Event", "Other"]; 
 
   // Fetch majors and subjects from the backend
   useEffect(() => {
@@ -102,6 +106,9 @@ const CreateAnnouncement = ({ onSuccess }) => {
     if (!formData.content.trim()) {
       newErrors.content = "Content is required";
     }
+    if (!formData.category) { // Validation for category
+      newErrors.category = "Please select a category";
+    }
     if (!formData.announcementType) {
       newErrors.announcementType = "Please select an announcement type";
     } else if (formData.announcementType === "major" && !formData.targetMajor) {
@@ -131,6 +138,7 @@ const CreateAnnouncement = ({ onSuccess }) => {
       const submissionData = {
         title: formData.title,
         content: formData.content,
+        category: formData.category, // Included category
         announcementType: formData.announcementType,
       };
 
@@ -160,6 +168,7 @@ const CreateAnnouncement = ({ onSuccess }) => {
       setFormData({
         title: "",
         content: "",
+        category: "", // Reset category
         announcementType: "",
         targetMajor: "",
         targetSubject: "",
@@ -203,6 +212,30 @@ const CreateAnnouncement = ({ onSuccess }) => {
         helperText={errors.content}
         required
       />
+
+      <FormControl
+        fullWidth
+        margin="normal"
+        error={!!errors.category} // Error handling for category
+        required
+      >
+        <InputLabel>Category</InputLabel>
+        <Select
+          name="category"
+          value={formData.category}
+          onChange={handleInputChange}
+          label="Category"
+        >
+          {categories.map((category) => (
+            <MenuItem key={category} value={category}>
+              {category}
+            </MenuItem>
+          ))}
+        </Select>
+        {errors.category && (
+          <FormHelperText>{errors.category}</FormHelperText>
+        )}
+      </FormControl>
 
       <FormControl
         fullWidth

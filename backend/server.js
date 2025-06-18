@@ -15,7 +15,7 @@ import LostAndFoundRoutes from "./routes/lost.routes.js";
 import NoteAppRoutes from "./routes/note.routes.js";
 import PomodoroRoutes from "./routes/pomodoro.routes.js";
 import AppointmentRoutes from "./routes/appointment.routes.js"
-
+import notificationRoutes from "./routes/notification.routes.js"
 import { app, server } from "./socket/socket.js";
 
 dotenv.config();
@@ -37,6 +37,8 @@ app.use("/api/lost-and-found", LostAndFoundRoutes);
 app.use("/api/notes", NoteAppRoutes);
 app.use("/api/pomodoro", PomodoroRoutes);
 app.use("/api/appointments", AppointmentRoutes);
+app.use("/api/notifications" , notificationRoutes)
+
 // Import note app routes
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
