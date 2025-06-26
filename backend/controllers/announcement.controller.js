@@ -1,36 +1,41 @@
 import Announcement from "../models/announcement.model.js";
 import { Student } from "../models/user.model.js";
 import { getIO, getReceiverSocketId } from "../socket/socket.js";
-import Notification from "../models/notification.model.js";
+import notificationService from "../utils/NotificationService.js";
 
-// Create a new announcement
 export const createAnnouncement = async (req, res) => {
   try {
     console.log("Received request body:", req.body);
-    const { title, content, category, announcementType, targetMajor, targetSubject } = req.body;
+    const {
+      title,
+      content,
+      category,
+      announcementType,
+      targetMajor,
+      targetSubject,
+    } = req.body;
 
-    // Validate required fields
+    // 1. Validate required fields
     if (!title || !content || !category || !announcementType) {
       return res.status(400).json({
-        message: "Title, content, category, and announcementType are required."
+        message: "Title, content, category, and announcementType are required.",
       });
     }
 
-    // Validate announcementType and related targets
+    // 2. Conditional target validation
     if (announcementType === "major" && !targetMajor) {
       return res.status(400).json({
-        message: "Target major is required for major announcements."
+        message: "Target major is required for major announcements.",
       });
     }
-
     if (announcementType === "subject" && !targetSubject) {
       return res.status(400).json({
-        message: "Target subject is required for subject announcements."
+        message: "Target subject is required for subject announcements.",
       });
     }
 
-    // Create the announcement document
-    const newAnnouncement = new Announcement({
+    // 3. Save the announcement
+    const newAnnouncement = await new Announcement({
       title,
       content,
       sender: req.user.id,
@@ -38,72 +43,55 @@ export const createAnnouncement = async (req, res) => {
       announcementType,
       targetMajor,
       targetSubject,
+    }).save();
+
+    // 4. Determine recipient IDs
+    let recipients = [];
+    if (announcementType === "major") {
+      const students = await Student.find({ major: targetMajor }).select("_id");
+      recipients = students.map(s => s._id.toString());
+    } else if (announcementType === "subject") {
+      const students = await Student
+        .find({ "schedule.subject": targetSubject })
+        .select("_id");
+      recipients = students.map(s => s._id.toString());
+    }
+
+    // 5. Send notifications via the shared service
+    await notificationService.notifyUsers({
+      recipients,
+      sender: req.user.id,
+      type: "announcement",
+      message: `[${category}] ${title}`,
+      data: {
+        announcementId: newAnnouncement._id,
+        title,
+        content,
+        category,
+        announcementType,
+        targetMajor,
+        targetSubject,
+        createdAt: newAnnouncement.createdAt,
+      },
     });
 
-    await newAnnouncement.save();
-
-    // Find target users for notification
-    let targetUsers = [];
-    if (announcementType === "major") {
-      targetUsers = await Student.find({ major: targetMajor }).select("_id");
-    } else if (announcementType === "subject") {
-      targetUsers = await Student.find({ "schedule.subject": targetSubject }).select("_id");
-    }
-
-    const io = getIO();
-
-    // Create notification documents and emit socket notifications to each user
-    for (const user of targetUsers) {
-      const notification = new Notification({
-        user: user._id,
-        sender: req.user.id,
-        type: "announcement",
-        message: `📢 [${category}] ${title}`,
-        data: {
-          announcementId: newAnnouncement._id,
-          title,
-          content,
-          category,
-          announcementType,
-          targetMajor,
-          targetSubject,
-          createdAt: newAnnouncement.createdAt,
-        },
-      });
-      await notification.save();
-
-      // Emit notification to specific user socket if connected
-      const socketId = getReceiverSocketId(user._id.toString());
-      if (socketId) {
-        io.to(socketId).emit("receiveNotification", {
-          _id: notification._id,
-          user: notification.user,
-          sender: {
-            _id: req.user.id,
-          },
-          type: notification.type,
-          message: notification.message,
-          data: notification.data,
-          read: notification.read,
-          createdAt: notification.createdAt,
-        });
-      }
-    }
-
-    res.status(201).json({
+    // 6. Respond to client
+    return res.status(201).json({
       success: true,
-      announcement: newAnnouncement,
       message: "Announcement created successfully",
+      announcement: newAnnouncement,
     });
   } catch (error) {
     console.error("Error creating announcement:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to create announcement",
       error: error.message,
     });
   }
 };
+
+
 
 // Get all announcements relevant to a specific student
 export const getAnnouncementsForStudent = async (req, res) => {

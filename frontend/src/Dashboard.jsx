@@ -27,6 +27,7 @@ import Badge from "@mui/material/Badge";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
+import Avatar from "@mui/material/Avatar";
 
 import { AccountPreview } from "@toolpad/core/Account";
 import { AppProvider } from "@toolpad/core/AppProvider";
@@ -181,9 +182,29 @@ function NotificationsMenu() {
               sx={{
                 backgroundColor: note.read ? "grey.100" : "inherit",
                 fontWeight: note.read ? "normal" : "bold",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: 0.3,
+                minWidth: 250,
               }}
             >
-              {note.message}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Avatar
+                  src={note.sender?.profilePic || ""}
+                  alt={note.sender?.firstName || "User"}
+                  sx={{ width: 30, height: 30 }}
+                />
+                <Typography variant="body2" fontWeight="bold" noWrap>
+                  {note.sender?.firstName} to Announcements
+                </Typography>
+              </Box>
+              <Typography
+                variant="body2"
+                sx={{ ml: 5, whiteSpace: "normal", wordBreak: "break-word" }}
+              >
+                {note.data?.title}
+              </Typography>
             </MenuItem>
           );
         })}

@@ -1,13 +1,6 @@
-// controllers/appointmentsController.js
 
 import Appointment from '../models/appointment.model.js';
 
-/**
- * Create a new appointment.
- * - appointmentReason is required
- * - startTime cannot be in the past
- * - no overlapping appointments (pending/accepted) for the same teacher
- */
 export const createAppointment = async (req, res, next) => {
   try {
     const { student, teacher, startTime, intervalMinutes, appointmentReason } = req.body;
@@ -25,8 +18,6 @@ export const createAppointment = async (req, res, next) => {
       return res.status(400).json({ message: 'Cannot create an appointment in the past.' });
     }
 
-    // 3. Prevent overlapping appointments for the same teacher
-    // Conflict if existing.startTime < new end AND existing.endTime > new start
     const conflict = await Appointment.findOne({
       teacher,
       status: { $in: ['pending', 'accepted'] },
@@ -56,12 +47,6 @@ export const createAppointment = async (req, res, next) => {
 };
 
 
-/**
- * List appointments visible to the current user:
- * - students see their own bookings
- * - teachers see their own bookings
- * - admins see all
- */
 export const listAppointments = async (req, res, next) => {
   try {
     const userId = req.user._id;
@@ -89,10 +74,6 @@ export const listAppointments = async (req, res, next) => {
   }
 };
 
-/**
- * Get a single appointment by ID.
- * Only the student, the teacher, or an admin may view.
- */
 export const getAppointmentById = async (req, res, next) => {
   try {
     const appt = await Appointment.findById(req.params.id)
@@ -118,10 +99,6 @@ export const getAppointmentById = async (req, res, next) => {
   }
 };
 
-/**
- * Accept a pending appointment.
- * Only teachers may accept, and only if status === 'pending'
- */
 export const acceptAppointment = async (req, res, next) => {
   try {
     const appt = await Appointment.findById(req.params.id);
@@ -141,10 +118,7 @@ export const acceptAppointment = async (req, res, next) => {
   }
 };
 
-/**
- * Reject a pending appointment, optionally with a rejectionReason.
- * Only teachers may reject, and only if status === 'pending'
- */
+
 export const rejectAppointment = async (req, res, next) => {
   try {
     const appt = await Appointment.findById(req.params.id);
