@@ -18,6 +18,9 @@ import AppointmentRoutes from "./routes/appointment.routes.js"
 import notificationRoutes from "./routes/notification.routes.js"
 import { app, server } from "./socket/socket.js";
 
+import { sendAppointmentReminders } from "./jobs/RemindAppointment.js"
+import cron from "node-cron";
+
 dotenv.config();
 
 const __dirname = path.resolve();
@@ -25,6 +28,11 @@ const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cookieParser());
+
+
+cron.schedule("* * * * *", async () => {
+  await sendAppointmentReminders();
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);

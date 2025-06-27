@@ -1,11 +1,12 @@
 
 import Appointment from '../models/appointment.model.js';
 
+import notificationService from "../utils/NotificationService.js";
+
 export const createAppointment = async (req, res, next) => {
   try {
     const { student, teacher, startTime, intervalMinutes, appointmentReason } = req.body;
 
-    // 1. Reason is required
     if (!appointmentReason) {
       return res.status(400).json({ message: 'Appointment reason is required.' });
     }
@@ -13,7 +14,6 @@ export const createAppointment = async (req, res, next) => {
     const start = new Date(startTime);
     const end = new Date(start.getTime() + intervalMinutes * 60000);
 
-    // 2. Prevent past appointments
     if (start < new Date()) {
       return res.status(400).json({ message: 'Cannot create an appointment in the past.' });
     }
@@ -29,15 +29,25 @@ export const createAppointment = async (req, res, next) => {
       return res.status(400).json({ message: 'An appointment overlaps with this time slot.' });
     }
 
-    // 4. Create and return
     const newAppt = await Appointment.create({
       student,
       teacher,
       startTime: start,
       intervalMinutes,
       appointmentReason,
-      // status defaults to 'pending' via model default
-      // endTime is auto‑computed in your pre('validate') hook
+    });
+
+    // Notify the teacher
+    await notificationService.notifyUsers({
+      recipients: [teacher],
+      sender: student,
+      type: "appointment",
+      message: "New appointment request received.",
+      data: {
+        appointmentId: newAppt._id,
+        appointmentReason,
+        startTime: start,
+      },
     });
 
     return res.status(201).json(newAppt);
@@ -45,6 +55,7 @@ export const createAppointment = async (req, res, next) => {
     next(err);
   }
 };
+
 
 
 export const listAppointments = async (req, res, next) => {
@@ -105,12 +116,27 @@ export const acceptAppointment = async (req, res, next) => {
     if (!appt) {
       return res.status(404).json({ message: 'Appointment not found.' });
     }
+
     if (appt.status !== 'pending') {
-      return res.status(400).json({ message: `Cannot accept an appointment in '${appt.status}' status.` });
+      return res.status(400).json({
+        message: `Cannot accept an appointment in '${appt.status}' status.`
+      });
     }
 
     appt.status = 'accepted';
     await appt.save();
+
+    // Notify the student
+    await notificationService.notifyUsers({
+      recipients: [appt.student],
+      sender: appt.teacher,
+      type: "appointment",
+      message: "Your appointment has been accepted.",
+      data: {
+        appointmentId: appt._id,
+        startTime: appt.startTime,
+      },
+    });
 
     return res.json(appt);
   } catch (err) {
@@ -119,14 +145,18 @@ export const acceptAppointment = async (req, res, next) => {
 };
 
 
+
 export const rejectAppointment = async (req, res, next) => {
   try {
     const appt = await Appointment.findById(req.params.id);
     if (!appt) {
       return res.status(404).json({ message: 'Appointment not found.' });
     }
+
     if (appt.status !== 'pending') {
-      return res.status(400).json({ message: `Cannot reject an appointment in '${appt.status}' status.` });
+      return res.status(400).json({
+        message: `Cannot reject an appointment in '${appt.status}' status.`
+      });
     }
 
     appt.status = 'rejected';
@@ -134,6 +164,18 @@ export const rejectAppointment = async (req, res, next) => {
       appt.rejectionReason = req.body.rejectionReason;
     }
     await appt.save();
+
+    // Notify the student
+    await notificationService.notifyUsers({
+      recipients: [appt.student],
+      sender: appt.teacher,
+      type: "appointment",
+      message: "Your appointment has been rejected.",
+      data: {
+        appointmentId: appt._id,
+        rejectionReason: req.body.rejectionReason || "",
+      },
+    });
 
     return res.json(appt);
   } catch (err) {

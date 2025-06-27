@@ -2,14 +2,15 @@ import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import { User } from "../models/user.model.js";
 import { getReceiverSocketId, getIO } from "../socket/socket.js";
+import notificationService from "../utils/NotificationService.js";
 
 export const sendMessage = async (req, res) => {
   try {
-    const { message }      = req.body;
-    const { id: receiverId } = req.params;
-    const senderId         = req.user._id;
+    const { message }         = req.body;
+    const receiverId          = req.params.id;
+    const senderId            = req.user._id;
 
-    // Find or create the conversation
+    // 1. Find or create the conversation
     let conversation = await Conversation.findOne({
       participants: { $all: [senderId, receiverId] },
     });
@@ -19,28 +20,41 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    // Create & save the new message
+    // 2. Create & save the new message
     const newMessage = new Message({ senderId, receiverId, message });
     conversation.messages.push(newMessage._id);
     await Promise.all([conversation.save(), newMessage.save()]);
 
-    // Emit via Socket.IO
-    const io = getIO();
-    const receiverSocketId = getReceiverSocketId(receiverId);
+    // 3. Emit the normal chat events
+    const io              = getIO();
+    const receiverSocket  = getReceiverSocketId(receiverId);
+    if (receiverSocket) {
+      io.to(receiverSocket).emit("newMessage", newMessage);
 
-    if (receiverSocketId) {
-      // Send the actual message event
-      io.to(receiverSocketId).emit("newMessage", newMessage);
-
-      // Recompute unread count and emit update
       const unreadCount = await Message.countDocuments({
         receiverId,
         senderId,
         read: false,
       });
-      io.to(receiverSocketId).emit("updateUnreadCount", {
+      io.to(receiverSocket).emit("updateUnreadCount", {
         userId: senderId,
         unreadCount,
+      });
+    }
+
+    // 4. If the text contains "@important", send a notification
+    if (message.includes("@important")) {
+      // notify the receiver that an important message arrived
+      await notificationService.notifyUsers({
+        recipients: [receiverId],
+        sender: senderId,
+        type: "chat",                             // or "important"
+        message: "You have an important message!",
+        data: {
+          messageId: newMessage._id,
+          conversationId: conversation._id,
+          snippet: message.slice(0, 50),          // optional preview
+        },
       });
     }
 

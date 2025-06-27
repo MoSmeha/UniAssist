@@ -170,44 +170,65 @@ function NotificationsMenu() {
           <MenuItem onClick={handleClose}>No notifications</MenuItem>
         )}
         {notifications.map((note, i) => {
-          const { markOneRead } = useSocketStore.getState().actions;
-          const handleNotificationClick = () => {
-            markOneRead(note._id);
-            handleClose();
-          };
-          return (
-            <MenuItem
-              key={i}
-              onClick={handleNotificationClick}
-              sx={{
-                backgroundColor: note.read ? "grey.100" : "inherit",
-                fontWeight: note.read ? "normal" : "bold",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                gap: 0.3,
-                minWidth: 250,
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <Avatar
-                  src={note.sender?.profilePic || ""}
-                  alt={note.sender?.firstName || "User"}
-                  sx={{ width: 30, height: 30 }}
-                />
-                <Typography variant="body2" fontWeight="bold" noWrap>
-                  {note.sender?.firstName} to Announcements
-                </Typography>
-              </Box>
-              <Typography
-                variant="body2"
-                sx={{ ml: 5, whiteSpace: "normal", wordBreak: "break-word" }}
-              >
-                {note.data?.title}
-              </Typography>
-            </MenuItem>
-          );
-        })}
+  const { markOneRead } = useSocketStore.getState().actions;
+  const handleNotificationClick = () => {
+    markOneRead(note._id);
+    handleClose();
+  };
+
+  // Fallback for sender
+  const senderName = note.sender?.firstName;
+  const hasSender = Boolean(senderName);
+  const isSystem = !hasSender;
+  const titleLine = hasSender
+    ? `${senderName} to ${note.data?.category || "notifications"}`
+    : "System Notification";
+
+  return (
+    <MenuItem
+      key={i}
+      onClick={handleNotificationClick}
+      sx={{
+        backgroundColor: note.read ? "grey.100" : "inherit",
+        fontWeight: note.read ? "normal" : "bold",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+        gap: 0.3,
+        minWidth: 250,
+      }}
+    >
+      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        {hasSender ? (
+          <Avatar
+            src={note.sender.profilePic || ""}
+            alt={senderName}
+            sx={{ width: 30, height: 30 }}
+          />
+        ) : (
+          <Avatar sx={{ width: 30, height: 30, bgcolor: "primary.main" }}>
+            S
+          </Avatar>
+        )}
+
+        <Typography variant="body2" fontWeight="bold" noWrap>
+          {titleLine}
+        </Typography>
+      </Box>
+
+      <Typography
+        variant="body2"
+        sx={{
+          ml: 5,
+          whiteSpace: "normal",
+          wordBreak: "break-word",
+        }}
+      >
+        {note.message || note.data?.title || "New notification"}
+      </Typography>
+    </MenuItem>
+  );
+})}
       </Menu>
     </>
   );
