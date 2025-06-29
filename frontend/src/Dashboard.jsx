@@ -50,6 +50,8 @@ import PomodoroTimer from "./pages/Pomodoro/Pomodoro";
 import NotesApp from "./pages/NoteApp/NotesApp";
 import AppointmentManager from "./pages/Appointment/Appointment";
 
+import LandingPage from "./LandingPage";
+
 import React from "react";
 import { useSocketStore } from "./zustand/SocketStore";
 const demoTheme = createTheme({
@@ -61,6 +63,7 @@ const demoTheme = createTheme({
 });
 
 const routes = {
+  "/dashboard" : <LandingPage/>,
   "/Chat": <ChatApp />,
   "/staffList": <StaffList />,
   "/Schedule": <ScheduleTable />,
@@ -180,8 +183,9 @@ function NotificationsMenu() {
   const senderName = note.sender?.firstName;
   const hasSender = Boolean(senderName);
   const isSystem = !hasSender;
+  console.log("i am notification data" ,note.data)
   const titleLine = hasSender
-    ? `${senderName} to ${note.data?.category || "notifications"}`
+    ? `${senderName} to ${note.data?.type || "notifications"}`
     : "System Notification";
 
   return (
@@ -255,7 +259,7 @@ function DashboardLayoutBasic({ window }) {
 
   const baseNavigation = [
     { kind: "header", title: "Main items" },
-    { segment: "dashboard", title: "Dashboard", icon: <DashboardIcon /> },
+    { segment: "dashboard", title: "HomePage", icon: <DashboardIcon /> },
     {
       segment: "Chat",
       title: "Chat",
