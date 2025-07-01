@@ -1,10 +1,11 @@
 import { User, Student } from "../models/user.model.js";
 import { BADGES } from "../models/Constants.js";
+import notificationService from "../utils/NotificationService.js";
 
 // POST /api/pomodoro/session
 export async function recordSession(req, res) {
   try {
-    const userId = req.user.id; 
+    const userId = req.user._id; 
     const { sessionMinutes } = req.body;
 
     if (!sessionMinutes || sessionMinutes <= 0) {
@@ -28,7 +29,7 @@ export async function recordSession(req, res) {
       const now = { timestamp: Date.now() };
 
       // Determine newly earned badges
-      const earned = BADGES.filter((b) => {
+      const earnedBadges = BADGES.filter((b) => {
         const already = currentBadges.has(b.id);
         if (already) return false;
 
@@ -46,11 +47,24 @@ export async function recordSession(req, res) {
           return b.condition(now);
         }
         return false;
-      }).map((b) => b.id);
+      });
+
+      const earned = earnedBadges.map((b) => b.id);
 
       if (earned.length) {
         student.badges.push(...earned);
         await student.save();
+
+        // Send notifications for each earned badge
+        for (const badge of earnedBadges) {
+          await notificationService.notifyUsers({
+            recipients: [userId],
+            sender: process.env.SYSTEM_SENDER_ID,
+            type: "pomodoro",
+            message: badge.description,
+            data: { badgeId: badge.id, type: "pomodoro" },
+          });
+        }
       }
 
       return res.json({
@@ -74,7 +88,7 @@ export async function recordSession(req, res) {
 
 export async function getStats(req, res) {
   try {
-    const userId = req.user.id; // assuming auth middleware sets req.user
+    const userId = req.user._id; // assuming auth middleware sets req.user
 
     // 1. Get base user stats
     const user = await User.findById(userId);

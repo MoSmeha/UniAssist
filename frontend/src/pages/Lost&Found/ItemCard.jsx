@@ -27,7 +27,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import PersonIcon from "@mui/icons-material/Person";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import ChatIcon from "@mui/icons-material/Chat"; // Import the Chat icon
-
+import toast from "react-hot-toast";
 import { useLostAndFoundStore } from "../../zustand/useLostFoundstore";
 import { useAuthStore } from "../../zustand/AuthStore";
 
@@ -58,10 +58,33 @@ const ItemCard = React.memo(function ItemCard({ item }) {
   };
 
   // Function for handling chat initiation
-  const handleChat = () => {
-    console.log(
-      `Initiating chat with ${item.postedBy.firstName} for item: ${item.title}`
-    );
+  const handleChat = async () => {
+    try {
+      const response = await fetch(`/api/lost-and-found/${item._id}/notify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          message:
+            item.type === "lost"
+              ? "Hey I found your item, text me!"
+              : "Hey this is my item, text me!",
+        }),
+      });
+
+      if (!response.ok) {
+        toast.error("Failed to send notification");
+      }else{
+        toast.success("Notification sent to the item poster.");
+      }
+
+      
+    } catch (error) {
+      console.error("Error sending notification:", error);
+      alert("Error sending notification. Please try again.");
+    }
   };
 
   return (
@@ -228,7 +251,7 @@ const ItemCard = React.memo(function ItemCard({ item }) {
                   size="small"
                   sx={{ textTransform: "none", borderRadius: 1 }}
                 >
-                  Chat
+                  Notify
                 </Button>
               )}
             </Box>

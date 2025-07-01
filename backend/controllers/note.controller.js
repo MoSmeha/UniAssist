@@ -33,7 +33,7 @@ export const createNote = async (req, res) => {
     }
 
     const note = await Note.create({
-      user: req.user.id,
+      user: req.user._id,
       title,
       content,
       tags,
@@ -49,7 +49,7 @@ export const createNote = async (req, res) => {
 // Get all notes for the logged-in user (pinning first, then most recently updated)
 export const getNotes = async (req, res) => {
   try {
-    const notes = await Note.find({ user: req.user.id }).sort({
+    const notes = await Note.find({ user: req.user._id }).sort({
       isPinned: -1,
       updatedAt: -1,
     });
@@ -62,7 +62,7 @@ export const getNotes = async (req, res) => {
 // Get a single note by its ID (only if it belongs to the logged-in user)
 export const getNoteById = async (req, res) => {
   try {
-    const note = await Note.findOne({ _id: req.params.id, user: req.user.id });
+    const note = await Note.findOne({ _id: req.params.id, user: req.user._id });
     if (!note) {
       return res
         .status(404)
@@ -104,7 +104,7 @@ export const updateNote = async (req, res) => {
     }
 
     const note = await Note.findOneAndUpdate(
-      { _id: req.params.id, user: req.user.id },
+      { _id: req.params.id, user: req.user._id },
       updates,
       { new: true, runValidators: true }
     );
@@ -125,7 +125,7 @@ export const deleteNote = async (req, res) => {
   try {
     const deleted = await Note.findOneAndDelete({
       _id: req.params.id,
-      user: req.user.id,
+      user: req.user._id,
     });
     if (!deleted) {
       return res
@@ -149,7 +149,7 @@ export const searchNotes = async (req, res) => {
 
     const regex = new RegExp(query.trim(), "i");
     const results = await Note.find({
-      user: req.user.id,
+      user: req.user._id,
       $or: [{ title: { $regex: regex } }, { content: { $regex: regex } }],
     }).sort({ isPinned: -1, updatedAt: -1 });
 

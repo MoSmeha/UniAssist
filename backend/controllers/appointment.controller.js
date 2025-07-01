@@ -47,6 +47,7 @@ export const createAppointment = async (req, res, next) => {
         appointmentId: newAppt._id,
         appointmentReason,
         startTime: start,
+        type: "Appointments",
       },
     });
 

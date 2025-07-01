@@ -19,6 +19,7 @@ import notificationRoutes from "./routes/notification.routes.js"
 import { app, server } from "./socket/socket.js";
 
 import { sendAppointmentReminders } from "./jobs/RemindAppointment.js"
+import { sendTodoReminders } from "./jobs/RemindTodo.js"
 import cron from "node-cron";
 
 dotenv.config();
@@ -32,6 +33,7 @@ app.use(cookieParser());
 
 cron.schedule("* * * * *", async () => {
   await sendAppointmentReminders();
+  await sendTodoReminders();
 });
 
 app.use("/api/auth", authRoutes);

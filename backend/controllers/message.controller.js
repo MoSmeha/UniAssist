@@ -49,11 +49,11 @@ export const sendMessage = async (req, res) => {
         recipients: [receiverId],
         sender: senderId,
         type: "chat",                             // or "important"
-        message: "You have an important message!",
+        message: message.slice(0, 35),
         data: {
           messageId: newMessage._id,
-          conversationId: conversation._id,
-          snippet: message.slice(0, 50),          // optional preview
+          conversationId: conversation._id,     
+          type: "Chat",
         },
       });
     }

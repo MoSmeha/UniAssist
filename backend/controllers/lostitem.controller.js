@@ -1,14 +1,14 @@
 // controllers/lostAndFoundController.js
 import LostAndFoundItem from "../models/lostitem.model.js";
 import { User } from "../models/user.model.js"; // Adjust path if needed
-
+import notificationService from "../utils/NotificationService.js";
 // Create a new Lost and Found item
 export const createLostAndFoundItem = async (req, res) => {
   try {
     const { title, description, category, location, phoneNumber, type } =
       req.body;
 
-    const postedBy = req.user.id;
+    const postedBy = req.user._id;
 
     if (
       !title?.trim() ||
@@ -125,7 +125,7 @@ export const updateResolvedStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { resolved } = req.body;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     // Ensure `resolved` is a boolean
     if (typeof resolved !== "boolean") {
@@ -160,11 +160,13 @@ export const updateResolvedStatus = async (req, res) => {
   }
 };
 
+
+
 // Delete a Lost and Found item
 export const deleteLostAndFoundItem = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = req.user._id;
 
     const item = await LostAndFoundItem.findById(id);
     if (!item) {
@@ -180,6 +182,37 @@ export const deleteLostAndFoundItem = async (req, res) => {
     // Use deleteOne instead of remove()
     await LostAndFoundItem.deleteOne({ _id: id });
     res.status(200).json({ message: "Item deleted successfully." });
+  } catch (error) {
+    if (error.kind === "ObjectId") {
+      return res.status(400).json({ message: "Invalid item ID" });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// New controller function to send notification to poster
+export const sendNotificationToPoster = async (req, res) => {
+  try {
+    const { id } = req.params; // item ID
+    const senderId = req.user._id;
+    const { message } = req.body;
+
+    const item = await LostAndFoundItem.findById(id);
+    if (!item) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+
+    const recipientId = item.postedBy.toString();
+
+    await notificationService.notifyUsers({
+      recipients: [recipientId],
+      sender: senderId,
+      type: "lostfound",
+      message: message || "This is my item",
+      data: { itemId: item._id, type: "Lost & Found" },
+    });
+
+    res.status(200).json({ message: "Notification sent to item poster." });
   } catch (error) {
     if (error.kind === "ObjectId") {
       return res.status(400).json({ message: "Invalid item ID" });

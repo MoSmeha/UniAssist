@@ -38,7 +38,7 @@ export const createAnnouncement = async (req, res) => {
     const newAnnouncement = await new Announcement({
       title,
       content,
-      sender: req.user.id,
+      sender: req.user._id,
       category,
       announcementType,
       targetMajor,
@@ -60,7 +60,7 @@ export const createAnnouncement = async (req, res) => {
     // 5. Send notifications via the shared service
     await notificationService.notifyUsers({
       recipients,
-      sender: req.user.id,
+      sender: req.user._id,
       type: "announcement",
       message: `[${category}] ${title}`,
       data: {
@@ -72,6 +72,7 @@ export const createAnnouncement = async (req, res) => {
         targetMajor,
         targetSubject,
         createdAt: newAnnouncement.createdAt,
+        type: "Announcements",
       },
     });
 
@@ -96,7 +97,7 @@ export const createAnnouncement = async (req, res) => {
 // Get all announcements relevant to a specific student
 export const getAnnouncementsForStudent = async (req, res) => {
   try {
-    const studentId = req.user.id;
+    const studentId = req.user._id;
     const student = await Student.findById(studentId);
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
@@ -134,7 +135,7 @@ export const getAnnouncementsForStudent = async (req, res) => {
 // Get all announcements created by a teacher
 export const getTeacherAnnouncements = async (req, res) => {
   try {
-    const teacherId = req.user.id;
+    const teacherId = req.user._id;
     const announcements = await Announcement.find({ sender: teacherId })
       .sort({ createdAt: -1 })
       .populate(
@@ -167,7 +168,7 @@ export const deleteAnnouncement = async (req, res) => {
       return res.status(404).json({ message: "Announcement not found" });
     }
 
-    if (announcement.sender.toString() !== req.user.id) {
+    if (announcement.sender.toString() !== req.user._id) {
       return res.status(403).json({ message: "Not authorized to delete this announcement" });
     }
 

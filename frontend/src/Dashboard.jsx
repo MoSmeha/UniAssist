@@ -182,43 +182,41 @@ function NotificationsMenu() {
   // Fallback for sender
   const senderName = note.sender?.firstName;
   const hasSender = Boolean(senderName);
-  const isSystem = !hasSender;
-  console.log("i am notification data" ,note.data)
-  const titleLine = hasSender
-    ? `${senderName} to ${note.data?.type || "notifications"}`
-    : "System Notification";
+        const titleLine = hasSender
+          ? `${senderName} to ${note.data?.type || "notifications"}`
+          : "System Notification";
 
-  return (
-    <MenuItem
-      key={i}
-      onClick={handleNotificationClick}
-      sx={{
-        backgroundColor: note.read ? "grey.100" : "inherit",
-        fontWeight: note.read ? "normal" : "bold",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-start",
-        gap: 0.3,
-        minWidth: 250,
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        {hasSender ? (
-          <Avatar
-            src={note.sender.profilePic || ""}
-            alt={senderName}
-            sx={{ width: 30, height: 30 }}
-          />
-        ) : (
-          <Avatar sx={{ width: 30, height: 30, bgcolor: "primary.main" }}>
-            S
-          </Avatar>
-        )}
+        return (
+          <MenuItem
+            key={i}
+            onClick={handleNotificationClick}
+            sx={{
+              backgroundColor: note.read ? "grey.100" : "inherit",
+              fontWeight: note.read ? "normal" : "bold",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: 0.3,
+              minWidth: 250,
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {hasSender ? (
+                <Avatar
+                  src={note.sender.profilePic || ""}
+                  alt={senderName}
+                  sx={{ width: 30, height: 30 }}
+                />
+              ) : (
+                <Avatar sx={{ width: 30, height: 30, bgcolor: "primary.main" }}>
+                  S
+                </Avatar>
+              )}
 
-        <Typography variant="body2" fontWeight="bold" noWrap>
-          {titleLine}
-        </Typography>
-      </Box>
+              <Typography variant="body2" fontWeight="bold" noWrap>
+                {titleLine}
+              </Typography>
+            </Box>
 
       <Typography
         variant="body2"
@@ -229,6 +227,13 @@ function NotificationsMenu() {
         }}
       >
         {note.message || note.data?.title || "New notification"}
+      </Typography>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ ml: 5 }}
+      >
+        {note.createdAt ? new Date(note.createdAt).toLocaleString() : ""}
       </Typography>
     </MenuItem>
   );
