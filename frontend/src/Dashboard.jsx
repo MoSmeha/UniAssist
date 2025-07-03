@@ -50,7 +50,9 @@ import PomodoroTimer from "./pages/Pomodoro/Pomodoro";
 import NotesApp from "./pages/NoteApp/NotesApp";
 import AppointmentManager from "./pages/Appointment/Appointment";
 
-import LandingPage from "./LandingPage";
+import LandingPage from "./pages/Landing/LandingPage";
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import Profile from "./pages/Profile"
 
 import React from "react";
 import { useSocketStore } from "./zustand/SocketStore";
@@ -74,7 +76,8 @@ const routes = {
   "/tools/AIBot": <ChatbotFrontend />,
   "/SignUp": <SignUp />,
   "/LostandFound": <LostAndFoundPage />,
-  "/appointmentBooking" : <AppointmentManager/>
+  "/appointmentBooking" : <AppointmentManager/>,
+  "/Profile": <Profile/>
 };
 
 function DemoPageContent({ pathname }) {
@@ -305,8 +308,8 @@ function DashboardLayoutBasic({ window }) {
       ],
     },
     { kind: "divider" },
-    { kind: "header", title: "Analytics" },
-    { segment: "integrations", title: "Integrations", icon: <LayersIcon /> },
+    { kind: "header", title: "Personal" },
+    { segment: "Profile", title: "Profile", icon: <AccountCircleIcon /> },
   ];
 
   const adminNavigation =

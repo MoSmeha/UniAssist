@@ -60,6 +60,11 @@ const ItemCard = React.memo(function ItemCard({ item }) {
   // Function for handling chat initiation
   const handleChat = async () => {
     try {
+      const message =
+        item.type === "lost"
+          ? `Hey I found ${item.title}, text me!`
+          : `Hey ${item.title} is my item, text me!`;
+
       const response = await fetch(`/api/lost-and-found/${item._id}/notify`, {
         method: "POST",
         headers: {
@@ -67,20 +72,15 @@ const ItemCard = React.memo(function ItemCard({ item }) {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          message:
-            item.type === "lost"
-              ? "Hey I found your item, text me!"
-              : "Hey this is my item, text me!",
+          message: message,
         }),
       });
 
       if (!response.ok) {
         toast.error("Failed to send notification");
-      }else{
+      } else {
         toast.success("Notification sent to the item poster.");
       }
-
-      
     } catch (error) {
       console.error("Error sending notification:", error);
       alert("Error sending notification. Please try again.");
