@@ -16,6 +16,7 @@ import NoteAppRoutes from "./routes/note.routes.js";
 import PomodoroRoutes from "./routes/pomodoro.routes.js";
 import AppointmentRoutes from "./routes/appointment.routes.js"
 import notificationRoutes from "./routes/notification.routes.js"
+import CafeteriaRoutes from "./routes/cafeteria.routes.js"
 import { app, server } from "./socket/socket.js";
 
 import { sendAppointmentReminders } from "./jobs/RemindAppointment.js"
@@ -48,6 +49,7 @@ app.use("/api/notes", NoteAppRoutes);
 app.use("/api/pomodoro", PomodoroRoutes);
 app.use("/api/appointments", AppointmentRoutes);
 app.use("/api/notifications" , notificationRoutes)
+app.use("/api/menu" , CafeteriaRoutes)
 
 // Import note app routes
 app.use(express.static(path.join(__dirname, "/frontend/dist")));

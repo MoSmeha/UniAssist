@@ -15,7 +15,6 @@ import InputIcon from "@mui/icons-material/Input";
 import RecentActorsIcon from "@mui/icons-material/RecentActors";
 import DateRangeIcon from "@mui/icons-material/DateRange";
 import ConstructionIcon from "@mui/icons-material/Construction";
-import LayersIcon from "@mui/icons-material/Layers";
 import AnnouncementIcon from "@mui/icons-material/Announcement";
 import DeviceUnknownIcon from "@mui/icons-material/DeviceUnknown";
 import AssistantIcon from "@mui/icons-material/Assistant";
@@ -23,7 +22,7 @@ import ClassIcon from "@mui/icons-material/Class";
 import TimerIcon from "@mui/icons-material/Timer";
 import TodayIcon from '@mui/icons-material/Today';
 import Badge from "@mui/material/Badge";
-
+import FastfoodIcon from '@mui/icons-material/Fastfood';
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -56,6 +55,7 @@ import Profile from "./pages/Profile"
 
 import React from "react";
 import { useSocketStore } from "./zustand/SocketStore";
+import CafeteriaMenu from "./pages/Cafeteria Menu/CafeteriaMenu";
 const demoTheme = createTheme({
   cssVariables: { colorSchemeSelector: "data-toolpad-color-scheme" },
   colorSchemes: { light: true, dark: true },
@@ -77,7 +77,8 @@ const routes = {
   "/SignUp": <SignUp />,
   "/LostandFound": <LostAndFoundPage />,
   "/appointmentBooking" : <AppointmentManager/>,
-  "/Profile": <Profile/>
+  "/Profile": <Profile/>,
+  "/CafeteriaMenu": <CafeteriaMenu/>
 };
 
 function DemoPageContent({ pathname }) {
@@ -294,6 +295,7 @@ function DashboardLayoutBasic({ window }) {
       title: "Announcements",
       icon: <AnnouncementIcon />,
     },
+    { segment: "CafeteriaMenu", title: "CafeteriaMenu", icon: <FastfoodIcon /> },
     { kind: "divider" },
     { kind: "header", title: "Student Tools" },
     {
@@ -305,6 +307,7 @@ function DashboardLayoutBasic({ window }) {
         { segment: "AIBot", title: "AI ChatBot", icon: <AssistantIcon /> },
         { segment: "NoteApp", title: "Note App", icon: <ClassIcon /> },
         { segment: "Pomodoro", title: "Pomodoro", icon: <TimerIcon /> },
+        
       ],
     },
     { kind: "divider" },

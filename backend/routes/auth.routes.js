@@ -4,7 +4,7 @@ import restrictTo from "../middleware/RoleRestriction.js";
 import protectRoute from "../middleware/protectRoute.js";
 const router = express.Router();
 
-router.post("/signup", signup); //protectRoute, restrictTo("admin"),
+router.post("/signup", protectRoute, restrictTo("admin"), signup);
 
 router.post("/login", login);
 
