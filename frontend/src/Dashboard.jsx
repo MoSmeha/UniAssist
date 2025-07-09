@@ -53,6 +53,8 @@ import LandingPage from "./pages/Landing/LandingPage";
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Profile from "./pages/Profile"
 
+import ContactUsMessages from "./pages/Contact Us Messages/ContactUsMessages";
+
 import React from "react";
 import { useSocketStore } from "./zustand/SocketStore";
 import CafeteriaMenu from "./pages/Cafeteria Menu/CafeteriaMenu";
@@ -78,7 +80,8 @@ const routes = {
   "/LostandFound": <LostAndFoundPage />,
   "/appointmentBooking" : <AppointmentManager/>,
   "/Profile": <Profile/>,
-  "/CafeteriaMenu": <CafeteriaMenu/>
+  "/CafeteriaMenu": <CafeteriaMenu/>,
+  "/ContactUs": <ContactUsMessages/>
 };
 
 function DemoPageContent({ pathname }) {
@@ -290,6 +293,8 @@ function DashboardLayoutBasic({ window }) {
       icon: <TodayIcon />,
     },
     { segment: "Schedule", title: "Schedule", icon: <DateRangeIcon /> },
+
+
     {
       segment: "announcements",
       title: "Announcements",
@@ -317,7 +322,7 @@ function DashboardLayoutBasic({ window }) {
 
   const adminNavigation =
     authUser?.role === "admin"
-      ? [{ segment: "SignUp", title: "SignUp", icon: <InputIcon /> }]
+      ? [{ segment: "SignUp", title: "SignUp", icon: <InputIcon /> },{ segment: "ContactUs", title: "ContactUs", icon: <DateRangeIcon /> },]
       : [];
 
   const navigation = [...baseNavigation, ...adminNavigation];

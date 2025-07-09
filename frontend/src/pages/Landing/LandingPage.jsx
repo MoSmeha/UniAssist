@@ -12,6 +12,7 @@ import {
   Fade,
   Zoom,
   Slide,
+  Button
 } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FindInPageIcon from '@mui/icons-material/FindInPage';
@@ -23,6 +24,7 @@ import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import BuildIcon from '@mui/icons-material/Build';
 import SchoolIcon from '@mui/icons-material/School';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import ContactForm from './ContactForm';
 import { styled, keyframes } from '@mui/material/styles';
 
 // Advanced animations
@@ -62,7 +64,7 @@ const HeroSection = styled(Box)(({ theme }) => ({
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
-  minHeight: '80vh',
+  minHeight: '92.5vh',
   overflow: 'hidden',
   '&::before': {
     content: '""',
@@ -76,7 +78,7 @@ const HeroSection = styled(Box)(({ theme }) => ({
   },
   [theme.breakpoints.down('md')]: {
     padding: theme.spacing(8, 0),
-    minHeight: '70vh',
+    minHeight: '93vh',
   },
 }));
 
@@ -259,25 +261,33 @@ const features = [
     color: 'info',
   },
 ];
-
 const UniAssistLandingPage = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [visible, setVisible] = useState(false);
+  const [showForm, setShowForm] = useState(false); // This state will control the dialog's open/close
 
   useEffect(() => {
     setVisible(true);
   }, []);
 
+  const handleOpenForm = () => { // Function to open the dialog
+    setShowForm(true);
+  };
+
+  const handleCloseForm = () => { // Function to close the dialog
+    setShowForm(false);
+  };
+
   return (
     <Box sx={{ flexGrow: 1, overflowX: 'hidden' }}>
       {/* Hero Section */}
-      <HeroSection>
+      <HeroSection >
         <FloatingElement sx={{ top: '10%', left: '10%', animationDelay: '0s' }} />
         <FloatingElement sx={{ top: '20%', right: '15%', animationDelay: '2s' }} />
         <FloatingElement sx={{ bottom: '15%', left: '20%', animationDelay: '4s' }} />
 
-        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1 }}>
+        <Container maxWidth="md" sx={{ position: 'relative', zIndex: 1, textAlign: 'center' }}>
           <Fade in={visible} timeout={1000}>
             <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <Box
@@ -290,28 +300,41 @@ const UniAssistLandingPage = () => {
               >
                 <SchoolIcon sx={{ fontSize: { xs: 60, md: 80 }, filter: 'drop-shadow(0 4px 8px rgba(255,255,255,0.3))' }} />
               </Box>
-              <HeroTitle variant={isMobile ? "h3" : "h2"} component="h1">
+              <HeroTitle variant={isMobile ? 'h3' : 'h2'} component="h1">
                 UniAssist
               </HeroTitle>
             </Box>
           </Fade>
 
           <Slide direction="up" in={visible} timeout={1200}>
-            <HeroTitle variant={isMobile ? "h4" : "h3"} component="h2" gutterBottom sx={{ mb: 3 }}>
+            <HeroTitle variant={isMobile ? 'h4' : 'h3'} component="h2" gutterBottom sx={{ mb: 3 }}>
               Your Ultimate University Companion
             </HeroTitle>
           </Slide>
 
           <Fade in={visible} timeout={1500}>
-            <Typography variant={isMobile ? "h6" : "h5"} component="p" sx={{ mb: 4, opacity: 0.95 }}>
-              UniAssist is designed to streamline your university life, connecting you with resources, people, and tools you need to succeed.
-            </Typography>
+            <Box sx={{ mb: 4, opacity: 0.95 }}>
+              <Typography variant={isMobile ? 'h6' : 'h5'} component="p" gutterBottom>
+                UniAssist is designed to streamline your university life, connecting you with resources, people, and tools you need to succeed.
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleOpenForm} // Call handleOpenForm to set showForm to true
+                sx={{ mt: 2, borderRadius: 2, px: 4 }}
+              >
+                Contact Us
+              </Button>
+            </Box>
           </Fade>
+
+          <ContactForm
+            open={showForm}      // Pass the showForm state to the 'open' prop
+            onClose={handleCloseForm} // Pass the closing function to 'onClose'
+          />
         </Container>
       </HeroSection>
 
-      {/* Features Section */}
-      {/* Removed <Container> to allow full width, and applied responsive padding directly to the Box */}
       <Box sx={{ py: 8, px: { xs: 2, md: 8, lg: 12 } }}>
           <Slide direction="up" in={visible} timeout={800}>
             <Typography

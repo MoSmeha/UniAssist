@@ -17,6 +17,8 @@ import PomodoroRoutes from "./routes/pomodoro.routes.js";
 import AppointmentRoutes from "./routes/appointment.routes.js"
 import notificationRoutes from "./routes/notification.routes.js"
 import CafeteriaRoutes from "./routes/cafeteria.routes.js"
+import ContactUsRoutes from "./routes/contactUs.routes.js";
+
 import { app, server } from "./socket/socket.js";
 
 import { sendAppointmentReminders } from "./jobs/RemindAppointment.js"
@@ -28,8 +30,8 @@ dotenv.config();
 const __dirname = path.resolve();
 const PORT = process.env.PORT || 5000;
 
-app.use(express.json());
-app.use(cookieParser());
+app.use(express.json()); // Middleware to parse JSON request bodies
+app.use(cookieParser()); // Middleware to parse cookies
 
 
 cron.schedule("* * * * *", async () => {
@@ -37,6 +39,7 @@ cron.schedule("* * * * *", async () => {
   await sendTodoReminders();
 });
 
+// API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/users", userRoutes);
@@ -50,14 +53,33 @@ app.use("/api/pomodoro", PomodoroRoutes);
 app.use("/api/appointments", AppointmentRoutes);
 app.use("/api/notifications" , notificationRoutes)
 app.use("/api/menu" , CafeteriaRoutes)
+app.use("/api/contact" , ContactUsRoutes)
 
-// Import note app routes
+
+app.use((err, req, res, next) => {
+  // Set default status code and message
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Something went wrong!';
+  console.error(err);
+
+  // Send a JSON response
+  res.status(statusCode).json({
+    status: 'error',
+    message: message,
+    // In production, you might not want to send the stack trace
+    // stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+  });
+});
+
+
+// Serve static files from the frontend build directory
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
 });
 
+// Start the server
 server.listen(PORT, () => {
   connectToMongoDB();
   console.log(`Server Running on port ${PORT}`);
