@@ -135,7 +135,7 @@ const Announcements = () => {
 
   return (
     <>
-      <AppBar position="static" color="primary" elevation={3} sx={{ mb: 3, p: 1 }}>
+       <AppBar position="static" color="primary" elevation={3} sx={{ mb: 3, py: 0.5 }}> {/* Changed p to py for vertical padding */}
         <Toolbar
           sx={{
             display: 'flex',
@@ -144,110 +144,103 @@ const Announcements = () => {
             alignItems: 'center',
             gap: { xs: 1, sm: 2 },
             width: '100%',
+            minHeight: { xs: '44px', sm: '50px' } // Slightly reduced minHeight
           }}
         >
-          {authUser.role === "student" ? (
-            <Typography
-              component="span"
-              variant="h5"
-              sx={{ fontSize: { xs: "1.0rem", sm: "1.5rem" } }}
-            >
-              Announcements:
-            </Typography>
-          ) : (
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                flexGrow: 1,
-                gap: { xs: 0.5, sm: 1 },
-                minWidth: 0,
+
+          {/* Always display search and filter for all roles */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              flexGrow: 1,
+              gap: { xs: 0.5, sm: 1 },
+              minWidth: 0,
+            }}
+          >
+            <TextField
+              variant="outlined"
+              placeholder="Search announcements..."
+              size="small"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "rgba(255, 255, 255, 0.7)" }} />
+                  </InputAdornment>
+                ),
+                sx: { fontSize: { xs: "0.85rem", sm: "inherit" } }
               }}
-            >
-              <TextField
-                variant="outlined"
-                placeholder="Search announcements..."
-                size="small"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: "rgba(255, 255, 255, 0.7)" }} />
-                    </InputAdornment>
-                  ),
-                  sx: { fontSize: { xs: "0.85rem", sm: "inherit" } }
-                }}
-                sx={{
-                  flexGrow: 1,
-                  minWidth: { xs: "80px", sm: "150px" },
-                  maxWidth: { xs: "200px", sm: "400px" },
-                  "& .MuiOutlinedInput-root": {
-                    backgroundColor: "rgba(255, 255, 255, 0.2)",
-                    "&:hover fieldset": {
-                      borderColor: "rgba(255, 255, 255, 0.7)",
+              sx={{
+                flexGrow: 1,
+                minWidth: { xs: "80px", sm: "150px" },
+                maxWidth: { xs: "200px", sm: "400px" },
+                "& .MuiOutlinedInput-root": {
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  "&:hover fieldset": {
+                    borderColor: "rgba(255, 255, 255, 0.7)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "white",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  color: "white",
+                },
+                "& .MuiInputLabel-root": {
+                  color: "white",
+                },
+                "& ::placeholder": {
+                  color: "rgba(255, 255, 255, 0.7)",
+                  opacity: 1,
+                },
+              }}
+            />
+
+            <Hidden mdDown>
+              <FormControl size="small" sx={{ minWidth: "120px", flexShrink: 0 }}>
+                <InputLabel id="category-select-label" sx={{ color: "white" }}>Category</InputLabel>
+                <Select
+                  labelId="category-select-label"
+                  value={selectedCategory}
+                  label="Category"
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  sx={{
+                    color: "white",
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "rgba(255, 255, 255, 0.5)",
                     },
-                    "&.Mui-focused fieldset": {
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
                       borderColor: "white",
                     },
-                  },
-                  "& .MuiInputBase-input": {
-                    color: "white",
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "white",
-                  },
-                  "& ::placeholder": {
-                    color: "rgba(255, 255, 255, 0.7)",
-                    opacity: 1,
-                  },
-                }}
-              />
-
-              <Hidden mdDown>
-                <FormControl size="small" sx={{ minWidth: "120px", flexShrink: 0 }}>
-                  <InputLabel id="category-select-label" sx={{ color: "white" }}>Category</InputLabel>
-                  <Select
-                    labelId="category-select-label"
-                    value={selectedCategory}
-                    label="Category"
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    sx={{
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "white",
+                    },
+                    "& .MuiSvgIcon-root": {
                       color: "white",
-                      "& .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "rgba(255, 255, 255, 0.5)",
-                      },
-                      "&:hover .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "white",
-                      },
-                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                        borderColor: "white",
-                      },
-                      "& .MuiSvgIcon-root": {
-                        color: "white",
-                      },
-                      fontSize: { xs: "0.85rem", sm: "inherit" },
-                    }}
-                  >
-                    <MenuItem value="">
-                      <em>All Categories</em>
+                    },
+                    fontSize: { xs: "0.85rem", sm: "inherit" },
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>All Categories</em>
+                  </MenuItem>
+                  {announcementCategories.map((category) => (
+                    <MenuItem key={category} value={category}>
+                      {category}
                     </MenuItem>
-                    {announcementCategories.map((category) => (
-                      <MenuItem key={category} value={category}>
-                        {category}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Hidden>
+                  ))}
+                </Select>
+              </FormControl>
+            </Hidden>
 
-              <Hidden mdUp>
-                <IconButton color="inherit" onClick={handleFilterDialogOpen} sx={{ flexShrink: 0 }}>
-                  <FilterListIcon />
-                </IconButton>
-              </Hidden>
-            </Box>
-          )}
+            <Hidden mdUp>
+              <IconButton color="inherit" onClick={handleFilterDialogOpen} sx={{ flexShrink: 0 }}>
+                <FilterListIcon />
+              </IconButton>
+            </Hidden>
+          </Box>
 
           {(authUser.role === "teacher" || authUser.role === "admin") && (
             <Box sx={{ flexShrink: 0, ml: { xs: 1, sm: 2 } }}>
@@ -287,14 +280,14 @@ const Announcements = () => {
                     <Typography
                       variant="subtitle1"
                       component="div"
-                      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }} 
+                      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}
                     >
                       {announcement.sender.firstName} {announcement.sender.lastName}
                       <Typography
                         component="span"
                         variant="subtitle2"
                         color="textSecondary"
-                        sx={{ ml: 1, fontSize: { xs: "0.5rem", sm: "0.85rem", md: "0.875rem" } }} 
+                        sx={{ ml: 1, fontSize: { xs: "0.5rem", sm: "0.85rem", md: "0.875rem" } }}
                       >
                         to {announcement.announcementType === "subject" ? announcement.targetSubject : announcement.targetMajor}
                       </Typography>
@@ -304,7 +297,7 @@ const Announcements = () => {
                         variant="body2"
                         color="textPrimary"
                         fontWeight="bold"
-                        sx={{ fontSize: { xs: "0.75rem", sm: "0.85rem", md: "1rem" } }} 
+                        sx={{ fontSize: { xs: "0.75rem", sm: "0.85rem", md: "1rem" } }}
                       >
                         {announcement.title}
                       </Typography>
@@ -316,7 +309,7 @@ const Announcements = () => {
                   <Typography
                     variant="body2"
                     color="textSecondary"
-                    sx={{ ml: 2, flexShrink: 0, fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.9rem" } }} 
+                    sx={{ ml: 2, flexShrink: 0, fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.9rem" } }}
                   >
                     {formatDate(announcement.createdAt)}
                   </Typography>
@@ -327,7 +320,7 @@ const Announcements = () => {
                   textAlign="left"
                   variant="body2"
                   paragraph
-                  sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1rem" } }} 
+                  sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1rem" } }}
                 >
                   {announcement.content}
                 </Typography>
@@ -336,7 +329,7 @@ const Announcements = () => {
                   <Typography
                     variant="caption"
                     color="textSecondary"
-                    sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem", md: "0.75rem" } }} 
+                    sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem", md: "0.75rem" } }}
                   >
                     {announcement.sender.title} - {announcement.sender.Department}
                   </Typography>

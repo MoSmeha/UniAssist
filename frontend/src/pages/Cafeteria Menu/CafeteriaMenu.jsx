@@ -257,12 +257,9 @@ export default function CafeteriaMenu() {
     // Render food card
     const renderFoodCard = (item, category) => (
         <Card
-            key={item._id}
+            key={item._id} // This key is already correctly placed
             sx={{
-                // Changed from '100%' to a fixed minimum height
-                // You can adjust this value (e.g., '300px', '280px', or 'auto' with minHeight)
-                // Using minHeight allows content to push it taller if needed, but ensures a baseline.
-                minHeight: 280, // Slightly increased minimum height for the card
+                minHeight: 280,
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'relative',
@@ -320,7 +317,7 @@ export default function CafeteriaMenu() {
                     alt={item.name}
                     sx={{
                         width: '100%',
-                        height: 300, // This height seems reasonable for the image
+                        height: 300,
                         objectFit: 'cover',
                         display: 'block'
                     }}
@@ -431,12 +428,10 @@ export default function CafeteriaMenu() {
         <Container maxWidth={false} sx={{ py: 3 }}>
             <Toaster position="top-center" reverseOrder={false} />
 
-            
-
             {/* Day selector - Centered */}
             <Box sx={{
                 display: 'flex',
-                justifyContent: 'center', // Centers the content horizontally
+                justifyContent: 'center',
                 mb: 4
             }}>
                 <Tabs
@@ -445,7 +440,7 @@ export default function CafeteriaMenu() {
                     variant="scrollable"
                     scrollButtons="auto"
                     sx={{
-                        maxWidth: '100%', // Ensure it doesn't overflow
+                        maxWidth: '100%',
                         '& .MuiTabs-flexContainer': {
                             gap: { xs: 0, sm: 1 }
                         }
@@ -453,7 +448,7 @@ export default function CafeteriaMenu() {
                 >
                     {DAYS.map(day => (
                         <Tab
-                            key={day}
+                            key={day} // Key for each Tab
                             label={day}
                             value={day}
                             sx={{
@@ -483,8 +478,11 @@ export default function CafeteriaMenu() {
             {/* Menu content */}
             {!loading && menu && (
                 <Box>
+                    {/* Add key to the Box returned by renderCategory */}
                     {Object.keys(CATEGORIES).map(categoryKey =>
-                        renderCategory(categoryKey)
+                        <Box key={categoryKey}> {/* THIS IS THE KEY ADDITION */}
+                            {renderCategory(categoryKey)}
+                        </Box>
                     )}
                 </Box>
             )}
@@ -505,7 +503,7 @@ export default function CafeteriaMenu() {
                             sx={{ mt: 2 }}
                             onClick={async () => {
                                 try {
-                                    const response = await fetch('/api/menu', { // Assuming this is your create menu endpoint
+                                    const response = await fetch('/api/menu', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({ day: selectedDay })
