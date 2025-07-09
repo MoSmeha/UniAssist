@@ -318,13 +318,22 @@ const UniAssistLandingPage = () => {
                 UniAssist is designed to streamline your university life, connecting you with resources, people, and tools you need to succeed.
               </Typography>
               <Button
-                variant="contained"
-                size="large"
-                onClick={handleOpenForm} // Call handleOpenForm to set showForm to true
-                sx={{ mt: 2, borderRadius: 2, px: 4 }}
-              >
-                Contact Us
-              </Button>
+              variant="contained"
+              size="large"
+              onClick={handleOpenForm} // Call handleOpenForm to set showForm to true
+              sx={{
+                mt: 2,
+                borderRadius: 2,
+                px: 4,
+                bgcolor: 'white', // Set background color to white
+                color: 'primary.main', // Set text color to Material-UI's primary blue
+                '&:hover': {
+                  bgcolor: 'grey.100', // Optional: slightly darker white on hover
+                },
+              }}
+            >
+              Contact Us
+            </Button>
             </Box>
           </Fade>
 

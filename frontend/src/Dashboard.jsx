@@ -54,7 +54,7 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import Profile from "./pages/Profile"
 
 import ContactUsMessages from "./pages/Contact Us Messages/ContactUsMessages";
-
+import { useTheme } from '@mui/material/styles';
 import React from "react";
 import { useSocketStore } from "./zustand/SocketStore";
 import CafeteriaMenu from "./pages/Cafeteria Menu/CafeteriaMenu";
@@ -152,9 +152,10 @@ SidebarFooterProfile.propTypes = { mini: PropTypes.bool.isRequired };
 function NotificationsMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
+  const theme = useTheme(); // Get the current theme
 
-  const notifications    = useSocketStore((s) => s.notifications);
-  const { markAllRead }  = useSocketStore((s) => s.actions);
+  const notifications = useSocketStore((s) => s.notifications);
+  const { markAllRead } = useSocketStore((s) => s.actions);
 
   // only count unread
   const unreadCount = notifications.filter((n) => !n.read).length;
@@ -180,75 +181,90 @@ function NotificationsMenu() {
           <MenuItem onClick={handleClose}>No notifications</MenuItem>
         )}
         {notifications.map((note, i) => {
-  const { markOneRead } = useSocketStore.getState().actions;
-  const handleNotificationClick = () => {
-    markOneRead(note._id);
-    handleClose();
-  };
+          const { markOneRead } = useSocketStore.getState().actions;
+          const handleNotificationClick = () => {
+            markOneRead(note._id);
+            handleClose();
+          };
 
-  // Fallback for sender
-  const senderName = note.sender?.firstName;
-  const hasSender = Boolean(senderName);
-        const titleLine = hasSender
-          ? `${senderName} to ${note.data?.type || "notifications"}`
-          : "System Notification";
+          // Fallback for sender
+          const senderName = note.sender?.firstName;
+          const hasSender = Boolean(senderName);
+          const titleLine = hasSender
+            ? (
+                <>
+                  {senderName} to{' '}
+                  <span style={{ color: theme.palette.error.main }}>
+                    {note.data?.type || 'notifications'}
+                  </span>
+                </>
+              )
+            : 'System Notification';
 
-        return (
-          <MenuItem
-            key={i}
-            onClick={handleNotificationClick}
-            sx={{
-              backgroundColor: note.read ? "grey.100" : "inherit",
-              fontWeight: note.read ? "normal" : "bold",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              gap: 0.3,
-              minWidth: 250,
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              {hasSender ? (
-                <Avatar
-                  src={note.sender.profilePic || ""}
-                  alt={senderName}
-                  sx={{ width: 30, height: 30 }}
-                />
-              ) : (
-                <Avatar sx={{ width: 30, height: 30, bgcolor: "primary.main" }}>
-                  S
-                </Avatar>
-              )}
+          return (
+            <MenuItem
+              key={i}
+              onClick={handleNotificationClick}
+              sx={{
+                // Adjust background color based on theme mode and read status
+                backgroundColor: note.read
+                  ? theme.palette.mode === 'dark'
+                    ? 'rgba(255, 255, 255, 0.08)' // Darker grey for dark mode
+                    : 'grey.100'
+                  : 'inherit',
+                fontWeight: note.read ? 'normal' : 'bold',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 0.3,
+                minWidth: 250,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {hasSender ? (
+                  <Avatar
+                    src={note.sender.profilePic || ''}
+                    alt={senderName}
+                    sx={{ width: 30, height: 30 }}
+                  />
+                ) : (
+                  <Avatar
+                    sx={{ width: 30, height: 30, bgcolor: 'primary.main' }}
+                  >
+                    S
+                  </Avatar>
+                )}
 
-              <Typography variant="body2" fontWeight="bold" noWrap>
-                {titleLine}
+                <Typography variant="body2" fontWeight="bold" noWrap>
+                  {titleLine}
+                </Typography>
+              </Box>
+
+              <Typography
+                variant="body2"
+                sx={{
+                  ml: 5,
+                  whiteSpace: 'normal',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {note.message || note.data?.title || 'New notification'}
               </Typography>
-            </Box>
-
-      <Typography
-        variant="body2"
-        sx={{
-          ml: 5,
-          whiteSpace: "normal",
-          wordBreak: "break-word",
-        }}
-      >
-        {note.message || note.data?.title || "New notification"}
-      </Typography>
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ ml: 5 }}
-      >
-        {note.createdAt ? new Date(note.createdAt).toLocaleString() : ""}
-      </Typography>
-    </MenuItem>
-  );
-})}
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ ml: 5 }}
+              >
+                {note.createdAt ? new Date(note.createdAt).toLocaleString() : ''}
+              </Typography>
+            </MenuItem>
+          );
+        })}
       </Menu>
     </>
   );
 }
+
 
 // Updated component for toolbar actions - AccountPreview removed
 function ToolbarActionsWithNotifications() {
