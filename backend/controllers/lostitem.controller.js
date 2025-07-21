@@ -139,7 +139,7 @@ export const updateResolvedStatus = async (req, res) => {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    if (item.postedBy.toString() !== userId) {
+    if (item.postedBy.toString() !== userId.toString()) {
       return res
         .status(403)
         .json({ message: "You are not authorized to update this item." });
@@ -173,7 +173,7 @@ export const deleteLostAndFoundItem = async (req, res) => {
       return res.status(404).json({ message: "Item not found" });
     }
 
-    if (item.postedBy.toString() !== userId) {
+    if (item.postedBy.toString() !== userId.toString()) {
       return res
         .status(403)
         .json({ message: "You are not authorized to delete this item." });
