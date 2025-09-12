@@ -7,10 +7,8 @@ import io from "socket.io-client";
 export const SocketManager = () => {
   const authUser = useAuthStore((state) => state.authUser);
   const { socket } = useSocketStore();
-  const { setSocket, setOnlineUsers, addNotificationsBatch, setNotifications } = useSocketStore(
-    (state) => state.actions
-  );
-
+  const { setSocket, setOnlineUsers, addNotificationsBatch, setNotifications } =
+    useSocketStore((state) => state.actions);
 
   const fetchConversations = useConversationStore(
     (state) => state.fetchConversations
@@ -58,7 +56,9 @@ export const SocketManager = () => {
         useSocketStore.getState().actions.addNotification(notification);
 
         // if you also want to fire toasts immediately, you can do:
-        const event = new CustomEvent("socketNotification", { detail: notification });
+        const event = new CustomEvent("socketNotification", {
+          detail: notification,
+        });
         window.dispatchEvent(event);
       });
 

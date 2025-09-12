@@ -20,9 +20,9 @@ import DeviceUnknownIcon from "@mui/icons-material/DeviceUnknown";
 import AssistantIcon from "@mui/icons-material/Assistant";
 import ClassIcon from "@mui/icons-material/Class";
 import TimerIcon from "@mui/icons-material/Timer";
-import TodayIcon from '@mui/icons-material/Today';
+import TodayIcon from "@mui/icons-material/Today";
 import Badge from "@mui/material/Badge";
-import FastfoodIcon from '@mui/icons-material/Fastfood';
+import FastfoodIcon from "@mui/icons-material/Fastfood";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -50,14 +50,15 @@ import NotesApp from "./pages/NoteApp/NotesApp";
 import AppointmentManager from "./pages/Appointment/Appointment";
 
 import LandingPage from "./pages/Landing/LandingPage";
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import Profile from "./pages/Profile"
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import Profile from "./pages/Profile";
 
 import ContactUsMessages from "./pages/Contact Us Messages/ContactUsMessages";
-import { useTheme } from '@mui/material/styles';
+import { useTheme } from "@mui/material/styles";
 import React from "react";
 import { useSocketStore } from "./zustand/SocketStore";
 import CafeteriaMenu from "./pages/Cafeteria Menu/CafeteriaMenu";
+
 const demoTheme = createTheme({
   cssVariables: { colorSchemeSelector: "data-toolpad-color-scheme" },
   colorSchemes: { light: true, dark: true },
@@ -67,10 +68,12 @@ const demoTheme = createTheme({
 });
 
 const routes = {
-  "/dashboard" : <LandingPage/>,
+  "/": <LandingPage />,
+  "/dashboard": <LandingPage />,
   "/Chat": <ChatApp />,
   "/staffList": <StaffList />,
   "/Schedule": <ScheduleTable />,
+  "/tools": <TODO />,
   "/tools/checkList": <TODO />,
   "/tools/NoteApp": <NotesApp />,
   "/tools/Pomodoro": <PomodoroTimer />,
@@ -78,10 +81,10 @@ const routes = {
   "/tools/AIBot": <ChatbotFrontend />,
   "/SignUp": <SignUp />,
   "/LostandFound": <LostAndFoundPage />,
-  "/appointmentBooking" : <AppointmentManager/>,
-  "/Profile": <Profile/>,
-  "/CafeteriaMenu": <CafeteriaMenu/>,
-  "/ContactUs": <ContactUsMessages/>
+  "/appointmentBooking": <AppointmentManager />,
+  "/Profile": <Profile />,
+  "/CafeteriaMenu": <CafeteriaMenu />,
+  "/ContactUs": <ContactUsMessages />,
 };
 
 function DemoPageContent({ pathname }) {
@@ -148,7 +151,6 @@ SidebarFooterProfile.propTypes = { mini: PropTypes.bool.isRequired };
 
 // Somewhere at top:
 
-
 function NotificationsMenu() {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
@@ -182,54 +184,49 @@ function NotificationsMenu() {
         )}
         {notifications.map((note, i) => {
           const { markOneRead } = useSocketStore.getState().actions;
-          const handleNotificationClick = () => {
-            markOneRead(note._id);
-            handleClose();
-          };
 
           // Fallback for sender
           const senderName = note.sender?.firstName;
           const hasSender = Boolean(senderName);
-          const titleLine = hasSender
-            ? (
-                <>
-                  {senderName} to{' '}
-                  <span style={{ color: theme.palette.error.main }}>
-                    {note.data?.type || 'notifications'}
-                  </span>
-                </>
-              )
-            : 'System Notification';
+          const titleLine = hasSender ? (
+            <>
+              {senderName} to{" "}
+              <span style={{ color: theme.palette.error.main }}>
+                {note.data?.type || "notifications"}
+              </span>
+            </>
+          ) : (
+            "System Notification"
+          );
 
           return (
             <MenuItem
               key={i}
-              onClick={handleNotificationClick}
               sx={{
                 // Adjust background color based on theme mode and read status
                 backgroundColor: note.read
-                  ? theme.palette.mode === 'dark'
-                    ? 'rgba(255, 255, 255, 0.08)' // Darker grey for dark mode
-                    : 'grey.100'
-                  : 'inherit',
-                fontWeight: note.read ? 'normal' : 'bold',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
+                  ? theme.palette.mode === "dark"
+                    ? "rgba(255, 255, 255, 0.08)" // Darker grey for dark mode
+                    : "grey.100"
+                  : "inherit",
+                fontWeight: note.read ? "normal" : "bold",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
                 gap: 0.3,
                 minWidth: 250,
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 {hasSender ? (
                   <Avatar
-                    src={note.sender.profilePic || ''}
+                    src={note.sender.profilePic || ""}
                     alt={senderName}
                     sx={{ width: 30, height: 30 }}
                   />
                 ) : (
                   <Avatar
-                    sx={{ width: 30, height: 30, bgcolor: 'primary.main' }}
+                    sx={{ width: 30, height: 30, bgcolor: "primary.main" }}
                   >
                     S
                   </Avatar>
@@ -244,18 +241,20 @@ function NotificationsMenu() {
                 variant="body2"
                 sx={{
                   ml: 5,
-                  whiteSpace: 'normal',
-                  wordBreak: 'break-word',
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
                 }}
               >
-                {note.message || note.data?.title || 'New notification'}
+                {note.message || note.data?.title || "New notification"}
               </Typography>
               <Typography
                 variant="caption"
                 color="text.secondary"
                 sx={{ ml: 5 }}
               >
-                {note.createdAt ? new Date(note.createdAt).toLocaleString() : ''}
+                {note.createdAt
+                  ? new Date(note.createdAt).toLocaleString()
+                  : ""}
               </Typography>
             </MenuItem>
           );
@@ -264,7 +263,6 @@ function NotificationsMenu() {
     </>
   );
 }
-
 
 // Updated component for toolbar actions - AccountPreview removed
 function ToolbarActionsWithNotifications() {
@@ -287,7 +285,7 @@ function DashboardLayoutBasic({ window }) {
 
   const baseNavigation = [
     { kind: "header", title: "Main items" },
-    { segment: "dashboard", title: "HomePage", icon: <DashboardIcon /> },
+    { segment: "", title: "HomePage", icon: <DashboardIcon /> },
     {
       segment: "Chat",
       title: "Chat",
@@ -310,13 +308,16 @@ function DashboardLayoutBasic({ window }) {
     },
     { segment: "Schedule", title: "Schedule", icon: <DateRangeIcon /> },
 
-
     {
       segment: "announcements",
       title: "Announcements",
       icon: <AnnouncementIcon />,
     },
-    { segment: "CafeteriaMenu", title: "CafeteriaMenu", icon: <FastfoodIcon /> },
+    {
+      segment: "CafeteriaMenu",
+      title: "CafeteriaMenu",
+      icon: <FastfoodIcon />,
+    },
     { kind: "divider" },
     { kind: "header", title: "Student Tools" },
     {
@@ -328,7 +329,6 @@ function DashboardLayoutBasic({ window }) {
         { segment: "AIBot", title: "AI ChatBot", icon: <AssistantIcon /> },
         { segment: "NoteApp", title: "Note App", icon: <ClassIcon /> },
         { segment: "Pomodoro", title: "Pomodoro", icon: <TimerIcon /> },
-        
       ],
     },
     { kind: "divider" },
@@ -338,7 +338,10 @@ function DashboardLayoutBasic({ window }) {
 
   const adminNavigation =
     authUser?.role === "admin"
-      ? [{ segment: "SignUp", title: "SignUp", icon: <InputIcon /> },{ segment: "ContactUs", title: "ContactUs", icon: <DateRangeIcon /> },]
+      ? [
+          { segment: "SignUp", title: "SignUp", icon: <InputIcon /> },
+          { segment: "ContactUs", title: "ContactUs", icon: <DateRangeIcon /> },
+        ]
       : [];
 
   const navigation = [...baseNavigation, ...adminNavigation];
@@ -360,7 +363,7 @@ function DashboardLayoutBasic({ window }) {
       branding={{
         logo: (
           <img
-            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRuWGq9FqPVwCUcNC30i5iPXnaNKGWGruCs5Q&s"
+            src="/UniAssistLogo_alt2.png"
             alt="UniAssist"
             style={{
               width: "40px",
