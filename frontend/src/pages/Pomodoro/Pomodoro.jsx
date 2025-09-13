@@ -14,8 +14,8 @@ import PomodoroStatsBadges from "./PomodoroStatsBadges";
 import ModeSelector from "./ModeSelector";
 import PomodoroTimer from "./PomodoroTimer";
 
-const WORK_DURATION = 1; // 25; // Original: 25 minutes
-const SHORT_BREAK_DURATION = 1; // 5; // Original: 5 minutes
+const WORK_DURATION = 25; // 25; // Original: 25 minutes
+const SHORT_BREAK_DURATION = 5; // 5; // Original: 5 minutes
 
 function Pomodoro() {
   // State to store Pomodoro statistics (total sessions, total hours) fetched from backend
