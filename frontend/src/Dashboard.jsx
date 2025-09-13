@@ -21,6 +21,7 @@ import AssistantIcon from "@mui/icons-material/Assistant";
 import ClassIcon from "@mui/icons-material/Class";
 import TimerIcon from "@mui/icons-material/Timer";
 import TodayIcon from "@mui/icons-material/Today";
+import InfoIcon from "@mui/icons-material/Info";
 import Badge from "@mui/material/Badge";
 import FastfoodIcon from "@mui/icons-material/Fastfood";
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -58,6 +59,8 @@ import React from "react";
 import { useSocketStore } from "./zustand/SocketStore";
 import CafeteriaMenu from "./pages/Cafeteria Menu/CafeteriaMenu";
 
+import UserManualPage from "./UserManual";
+
 import AdminPanel from "./pages/AdminPanel/AdminPanel";
 const demoTheme = createTheme({
   cssVariables: { colorSchemeSelector: "data-toolpad-color-scheme" },
@@ -85,6 +88,7 @@ const routes = {
   "/Profile": <Profile />,
   "/CafeteriaMenu": <CafeteriaMenu />,
   "/ContactUs": <ContactUsMessages />,
+  "/UserManual": <UserManualPage />,
 };
 
 function DemoPageContent({ pathname }) {
@@ -319,7 +323,7 @@ function DashboardLayoutBasic({ window }) {
       icon: <FastfoodIcon />,
     },
     { kind: "divider" },
-    { kind: "header", title: "Student Tools" },
+    { kind: "header", title: "Productivity Tools" },
     {
       segment: "tools",
       title: "Tools",
@@ -334,6 +338,7 @@ function DashboardLayoutBasic({ window }) {
     { kind: "divider" },
     { kind: "header", title: "Personal" },
     { segment: "Profile", title: "Profile", icon: <AccountCircleIcon /> },
+    { segment: "UserManual", title: "Profile", icon: <InfoIcon /> },
   ];
 
   const adminNavigation =
