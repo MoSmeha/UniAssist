@@ -64,3 +64,40 @@ export const updateProfilePic = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+export const editUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedUser = await User.findByIdAndUpdate(id, req.body, {
+      new: true, // Return the updated document
+      runValidators: true, // Run schema validators on update
+    }).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error in editUser: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletedUser = await User.findByIdAndDelete(id);
+
+    if (!deletedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error in deleteUser: ", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

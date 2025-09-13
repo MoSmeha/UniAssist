@@ -81,8 +81,6 @@ export const signup = async (req, res) => {
     const newUser = new User(userData);
     await newUser.save();
 
-    generateTokenAndSetCookie(newUser._id, res);
-
     // Build response
     const responseData = {
       _id: newUser._id,

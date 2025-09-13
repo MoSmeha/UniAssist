@@ -1,368 +1,570 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import dayjs from "dayjs";
-import GenderCheckbox from "./GenderCheckbox";
-import useSignup from "../../hooks/useSignup";
+import React, { useState, useMemo } from "react";
 import {
+  Container,
   Box,
   TextField,
   Button,
+  Typography,
+  Grid,
+  Select,
   MenuItem,
   FormControl,
   InputLabel,
-  Select,
-  Typography,
+  CircularProgress,
+  Divider,
   List,
   ListItem,
   ListItemText,
+  ListItemSecondaryAction,
   IconButton,
+  CssBaseline,
 } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { LocalizationProvider, TimePicker } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
+import dayjs from "dayjs";
+import toast, { Toaster } from "react-hot-toast";
 
-const SignUp = () => {
-  const [inputs, setInputs] = useState({
+const MAJORS = [
+  "Computer Science",
+  "Computer Engineering",
+  "Accounting",
+  "Sports Training",
+  "Dental Lab",
+];
+const SUBJECTS = [
+  "Oral and Written Communication - COMM001",
+  "Data Structures and Algorithms - SYS332",
+  "Web Development 2 - SYS554",
+  "Accounting and finance - BUS112",
+  "Nutrituin - SPO451",
+];
+const DEPARTMENTS = [
+  "Computer and Communications Engineering",
+  "Business",
+  "Sports Sciences",
+  "Public Health",
+  "Administration",
+];
+const ROLES = ["student", "teacher", "admin"];
+const GENDERS = ["male", "female"];
+const TITLES = [
+  "Professor",
+  "Associate Professor",
+  "Assistant Professor",
+  "Lecturer",
+  "Administrator",
+  "Dean",
+];
+const DAYS = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+const MODES = ["campus", "online"];
+
+function App() {
+  const [mode, setMode] = useState("light");
+
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+          ...(mode === "light"
+            ? {
+                primary: {
+                  main: "#1976d2",
+                },
+                secondary: {
+                  main: "#dc004e",
+                },
+                background: {
+                  default: "#f4f6f8",
+                  paper: "#ffffff",
+                },
+              }
+            : {
+                primary: {
+                  main: "#90caf9",
+                },
+                secondary: {
+                  main: "#f48fb1",
+                },
+                background: {
+                  default: "#121212",
+                  paper: "#1d1d1d",
+                },
+              }),
+        },
+        typography: {
+          fontFamily: "Roboto, Arial, sans-serif",
+        },
+      }),
+    [mode]
+  );
+
+  const [formData, setFormData] = useState({
     uniId: "",
     firstName: "",
     lastName: "",
     email: "",
     password: "",
-    confirmPassword: "",
     gender: "",
     role: "",
     Department: "",
     title: "",
+    major: "",
+    schedule: [],
   });
 
-  // State for holding all schedule entries
-  const [schedule, setSchedule] = useState([]);
-
-  // Current schedule entry state; startTime and endTime are Date objects for the TimePicker
-  const [currentSchedule, setCurrentSchedule] = useState({
-    day: "Monday",
+  const [scheduleEntry, setScheduleEntry] = useState({
+    day: "",
     subject: "",
-    startTime: dayjs(), // Instead of new Date()
-    endTime: dayjs(), // Instead of new Date()
-    mode: "campus",
+    startTime: null,
+    endTime: null,
+    mode: "",
     room: "",
   });
 
-  const { loading, signup } = useSignup();
+  const [loading, setLoading] = useState(false);
 
-  const handleCheckboxChange = (gender) => {
-    setInputs({ ...inputs, gender });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => {
+      const newState = { ...prev, [name]: value };
+      if (name === "role") {
+        newState.title = "";
+        newState.major = "";
+      }
+      return newState;
+    });
   };
 
   const handleScheduleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "mode") {
-      // Automatically set room to "Microsoft Teams" when mode is online
-      setCurrentSchedule((prev) => ({
-        ...prev,
-        mode: value,
-        room: value === "online" ? "Microsoft Teams" : "",
-      }));
-    } else {
-      setCurrentSchedule({ ...currentSchedule, [name]: value });
-    }
+    setScheduleEntry((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleStartTimeChange = (newValue) => {
-    setCurrentSchedule((prev) => ({ ...prev, startTime: newValue }));
+  const handleTimeChange = (newValue, fieldName) => {
+    setScheduleEntry((prev) => ({ ...prev, [fieldName]: newValue }));
   };
 
-  const handleEndTimeChange = (newValue) => {
-    setCurrentSchedule((prev) => ({ ...prev, endTime: newValue }));
-  };
-
-  const addScheduleEntry = () => {
-    // Format the time values as strings (e.g., "09:00 AM")
-    const formatTime = (dayjsObj) => dayjsObj.format("hh:mm A"); // Using dayjs format instead of toLocaleTimeString
-
-    const formattedEntry = {
-      ...currentSchedule,
-      startTime: formatTime(currentSchedule.startTime),
-      endTime: formatTime(currentSchedule.endTime),
+  const handleAddSchedule = () => {
+    const newScheduleEntry = {
+      ...scheduleEntry,
+      startTime: scheduleEntry.startTime
+        ? dayjs(scheduleEntry.startTime).format("HH:mm")
+        : "",
+      endTime: scheduleEntry.endTime
+        ? dayjs(scheduleEntry.endTime).format("HH:mm")
+        : "",
     };
 
-    setSchedule([...schedule, formattedEntry]);
-    // Reset current schedule entry for new input
-    setCurrentSchedule({
-      day: "Monday",
+    if (Object.values(newScheduleEntry).some((field) => field === "")) {
+      toast.error("Please fill all schedule fields before adding.");
+      return;
+    }
+    setFormData((prev) => ({
+      ...prev,
+      schedule: [...prev.schedule, newScheduleEntry],
+    }));
+
+    setScheduleEntry({
+      day: "",
       subject: "",
-      startTime: dayjs(), // Use dayjs here
-      endTime: dayjs(), // Use dayjs here
-      mode: "campus",
+      startTime: null,
+      endTime: null,
+      mode: "",
       room: "",
     });
   };
 
-  const removeScheduleEntry = (index) => {
-    setSchedule(schedule.filter((_, i) => i !== index));
+  const handleRemoveSchedule = (indexToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      schedule: prev.schedule.filter((_, index) => index !== indexToRemove),
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await signup({ ...inputs, schedule });
+    setLoading(true);
+
+    const submissionData = { ...formData };
+    if (formData.role !== "student") delete submissionData.major;
+    if (formData.role !== "teacher" && formData.role !== "admin")
+      delete submissionData.title;
+
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(submissionData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to sign up user.");
+      }
+
+      toast.success(
+        `User ${result.firstName} ${result.lastName} created successfully!`
+      );
+      setFormData({
+        uniId: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        gender: "",
+        role: "",
+        Department: "",
+        title: "",
+        major: "",
+        schedule: [],
+      });
+    } catch (err) {
+      toast.error(err.message);
+      console.error("Signup failed:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ maxWidth: 600, mx: "auto", p: 2 }}>
-        <Typography variant="h4" align="center" gutterBottom>
-          Sign Up ChatApp
-        </Typography>
-        <form onSubmit={handleSubmit}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField
-              label="University ID"
-              variant="outlined"
-              value={inputs.uniId}
-              onChange={(e) => setInputs({ ...inputs, uniId: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="First Name"
-              variant="outlined"
-              value={inputs.firstName}
-              onChange={(e) =>
-                setInputs({ ...inputs, firstName: e.target.value })
-              }
-              fullWidth
-            />
-            <TextField
-              label="Last Name"
-              variant="outlined"
-              value={inputs.lastName}
-              onChange={(e) =>
-                setInputs({ ...inputs, lastName: e.target.value })
-              }
-              fullWidth
-            />
-            <TextField
-              label="Email"
-              variant="outlined"
-              type="email"
-              value={inputs.email}
-              onChange={(e) => setInputs({ ...inputs, email: e.target.value })}
-              fullWidth
-            />
-            <TextField
-              label="Password"
-              variant="outlined"
-              type="password"
-              value={inputs.password}
-              onChange={(e) =>
-                setInputs({ ...inputs, password: e.target.value })
-              }
-              fullWidth
-            />
-            <TextField
-              label="Confirm Password"
-              variant="outlined"
-              type="password"
-              value={inputs.confirmPassword}
-              onChange={(e) =>
-                setInputs({ ...inputs, confirmPassword: e.target.value })
-              }
-              fullWidth
-            />
-            <GenderCheckbox
-              onCheckboxChange={handleCheckboxChange}
-              selectedGender={inputs.gender}
-            />
-            <FormControl fullWidth>
-              <InputLabel>Role</InputLabel>
-              <Select
-                value={inputs.role}
-                label="Role"
-                onChange={(e) => setInputs({ ...inputs, role: e.target.value })}
-              >
-                <MenuItem value="student">Student</MenuItem>
-                <MenuItem value="teacher">Teacher</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
-              </Select>
-            </FormControl>
-            <FormControl fullWidth>
-              <InputLabel>Department</InputLabel>
-              <Select
-                value={inputs.Department}
-                label="Department"
-                onChange={(e) =>
-                  setInputs({ ...inputs, Department: e.target.value })
-                }
-              >
-                <MenuItem value="Computer and Communications Engineering">
-                  Computer and Communications Engineering
-                </MenuItem>
-                <MenuItem value="Technology in Computer Science">
-                  Technology in Computer Science
-                </MenuItem>
-                <MenuItem value="Human Resource Management">
-                  Human Resource Management
-                </MenuItem>
-                <MenuItem value="Economics">Economics</MenuItem>
-                <MenuItem value="Accounting, Control, and Auditing">
-                  Accounting, Control, and Auditing
-                </MenuItem>
-                <MenuItem value="Banking and Finance">
-                  Banking and Finance
-                </MenuItem>
-                <MenuItem value="Marketing and Management">
-                  Marketing and Management
-                </MenuItem>
-                <MenuItem value="Nursing Sciences">Nursing Sciences</MenuItem>
-                <MenuItem value="Dental Laboratory Technology">
-                  Dental Laboratory Technology
-                </MenuItem>
-                <MenuItem value="Physical Therapy">Physical Therapy</MenuItem>
-                <MenuItem value="Communication and Journalism">
-                  Communication and Journalism
-                </MenuItem>
-                <MenuItem value="Audiovisual">Audiovisual</MenuItem>
-                <MenuItem value="Graphic Design and Advertising">
-                  Graphic Design and Advertising
-                </MenuItem>
-                <MenuItem value="Music Therapy">Music Therapy</MenuItem>
-                <MenuItem value="European Art Music">
-                  European Art Music
-                </MenuItem>
-                <MenuItem value="General Musicology of Traditions and Arabic Art Music">
-                  General Musicology of Traditions and Arabic Art Music
-                </MenuItem>
-                <MenuItem value="Music Education Sciences and Music, Technology, and Media">
-                  Music Education Sciences and Music, Technology, and Media
-                </MenuItem>
-                <MenuItem value="Motricity Education and Adapted Physical Activities">
-                  Motricity Education and Adapted Physical Activities
-                </MenuItem>
-                <MenuItem value="Sports Training">Sports Training</MenuItem>
-                <MenuItem value="Sports Management">Sports Management</MenuItem>
-              </Select>
-            </FormControl>
-            <TextField
-              label="Title"
-              variant="outlined"
-              value={inputs.title}
-              onChange={(e) => setInputs({ ...inputs, title: e.target.value })}
-              fullWidth
-            />
-
-            {/* Schedule Entry Section */}
-            <Box
-              sx={{
-                border: "1px solid #ccc",
-                borderRadius: 1,
-                p: 2,
-                mt: 2,
-              }}
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Toaster position="top-center" />
+        <Container component="main" maxWidth="md">
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: 4,
+              borderRadius: 2,
+              boxShadow: 3,
+              backgroundColor: "background.paper",
+            }}
+          >
+            <Typography component="h1" variant="h4" gutterBottom>
+              Create New User
+            </Typography>
+            <Typography
+              component="p"
+              variant="subtitle1"
+              color="text.secondary"
+              align="center"
+              sx={{ mb: 3 }}
             >
-              <Typography variant="h6" gutterBottom>
-                Schedule Entry
-              </Typography>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Day</InputLabel>
-                <Select
-                  name="day"
-                  value={currentSchedule.day}
-                  label="Day"
-                  onChange={handleScheduleChange}
-                >
-                  <MenuItem value="Monday">Monday</MenuItem>
-                  <MenuItem value="Tuesday">Tuesday</MenuItem>
-                  <MenuItem value="Wednesday">Wednesday</MenuItem>
-                  <MenuItem value="Thursday">Thursday</MenuItem>
-                  <MenuItem value="Friday">Friday</MenuItem>
-                  <MenuItem value="Saturday">Saturday</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                label="Subject"
-                name="subject"
-                variant="outlined"
-                value={currentSchedule.subject}
-                onChange={handleScheduleChange}
-                fullWidth
-                sx={{ mb: 2 }}
-              />
-              <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-                <TimePicker
-                  label="Start Time"
-                  value={currentSchedule.startTime}
-                  onChange={handleStartTimeChange}
-                />
+              Fill in the details below to create a new user account.
+            </Typography>
 
-                <TimePicker
-                  label="End Time"
-                  value={currentSchedule.endTime}
-                  onChange={handleEndTimeChange}
-                />
-              </Box>
-              <FormControl fullWidth sx={{ mb: 2 }}>
-                <InputLabel>Mode</InputLabel>
-                <Select
-                  name="mode"
-                  value={currentSchedule.mode}
-                  label="Mode"
-                  onChange={handleScheduleChange}
-                >
-                  <MenuItem value="campus">Campus</MenuItem>
-                  <MenuItem value="online">Online</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                label="Room"
-                name="room"
-                variant="outlined"
-                value={currentSchedule.room}
-                onChange={handleScheduleChange}
-                fullWidth
-                disabled={currentSchedule.mode === "online"}
-                sx={{ mb: 2 }}
-              />
-              <Button variant="contained" onClick={addScheduleEntry}>
-                Add Schedule Entry
-              </Button>
-            </Box>
+            <Box
+              component="form"
+              noValidate
+              onSubmit={handleSubmit}
+              sx={{ mt: 3, width: "100%" }}
+            >
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    name="firstName"
+                    required
+                    fullWidth
+                    label="First Name"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    required
+                    fullWidth
+                    label="Last Name"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    required
+                    fullWidth
+                    label="University ID"
+                    name="uniId"
+                    value={formData.uniId}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth required>
+                    <InputLabel>Gender</InputLabel>
+                    <Select
+                      name="gender"
+                      value={formData.gender}
+                      label="Gender"
+                      onChange={handleChange}
+                    >
+                      {GENDERS.map((g) => (
+                        <MenuItem key={g} value={g}>
+                          {g.charAt(0).toUpperCase() + g.slice(1)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    required
+                    fullWidth
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    required
+                    fullWidth
+                    name="password"
+                    label="Password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth required>
+                    <InputLabel>Role</InputLabel>
+                    <Select
+                      name="role"
+                      value={formData.role}
+                      label="Role"
+                      onChange={handleChange}
+                    >
+                      {ROLES.map((r) => (
+                        <MenuItem key={r} value={r}>
+                          {r.charAt(0).toUpperCase() + r.slice(1)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <FormControl fullWidth required>
+                    <InputLabel>Department</InputLabel>
+                    <Select
+                      name="Department"
+                      value={formData.Department}
+                      label="Department"
+                      onChange={handleChange}
+                    >
+                      {DEPARTMENTS.map((d) => (
+                        <MenuItem key={d} value={d}>
+                          {d}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                {formData.role === "student" && (
+                  <Grid item xs={12}>
+                    <FormControl fullWidth required>
+                      <InputLabel>Major</InputLabel>
+                      <Select
+                        name="major"
+                        value={formData.major}
+                        label="Major"
+                        onChange={handleChange}
+                      >
+                        {MAJORS.map((m) => (
+                          <MenuItem key={m} value={m}>
+                            {m}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                )}
+                {(formData.role === "teacher" || formData.role === "admin") && (
+                  <Grid item xs={12}>
+                    <FormControl fullWidth required>
+                      <InputLabel>Title</InputLabel>
+                      <Select
+                        name="title"
+                        value={formData.title}
+                        label="Title"
+                        onChange={handleChange}
+                      >
+                        {TITLES.map((t) => (
+                          <MenuItem key={t} value={t}>
+                            {t}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                )}
+              </Grid>
 
-            {schedule.length > 0 && (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="h6">Added Schedule Entries</Typography>
-                <List>
-                  {schedule.map((entry, index) => (
+              <Divider sx={{ my: 4 }}>
+                <Typography variant="h6">Schedule</Typography>
+              </Divider>
+              <Grid container spacing={2} alignItems="center">
+                <Grid item xs={12} sm={6} md={4}>
+                  <FormControl fullWidth>
+                    <InputLabel>Day</InputLabel>
+                    <Select
+                      name="day"
+                      value={scheduleEntry.day}
+                      label="Day"
+                      onChange={handleScheduleChange}
+                    >
+                      {DAYS.map((d) => (
+                        <MenuItem key={d} value={d}>
+                          {d}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12} sm={6} md={8}>
+                  <FormControl fullWidth>
+                    <InputLabel>Subject</InputLabel>
+                    <Select
+                      name="subject"
+                      value={scheduleEntry.subject}
+                      label="Subject"
+                      onChange={handleScheduleChange}
+                    >
+                      {SUBJECTS.map((s) => (
+                        <MenuItem key={s} value={s}>
+                          {s}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <MobileTimePicker
+                    label="Start Time"
+                    value={scheduleEntry.startTime}
+                    onChange={(newValue) =>
+                      handleTimeChange(newValue, "startTime")
+                    }
+                    slotProps={{ textField: { fullWidth: true } }}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <MobileTimePicker
+                    label="End Time"
+                    value={scheduleEntry.endTime}
+                    onChange={(newValue) =>
+                      handleTimeChange(newValue, "endTime")
+                    }
+                    slotProps={{ textField: { fullWidth: true } }}
+                  />
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Mode</InputLabel>
+                    <Select
+                      name="mode"
+                      value={scheduleEntry.mode}
+                      label="Mode"
+                      onChange={handleScheduleChange}
+                    >
+                      {MODES.map((m) => (
+                        <MenuItem key={m} value={m}>
+                          {m.charAt(0).toUpperCase() + m.slice(1)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={6} sm={3}>
+                  <TextField
+                    name="room"
+                    label="Room/Link"
+                    value={scheduleEntry.room}
+                    onChange={handleScheduleChange}
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={handleAddSchedule}
+                    sx={{ mt: 1 }}
+                  >
+                    Add Schedule Entry
+                  </Button>
+                </Grid>
+              </Grid>
+
+              {formData.schedule.length > 0 && (
+                <List sx={{ mt: 2 }}>
+                  {formData.schedule.map((entry, index) => (
                     <ListItem
                       key={index}
-                      secondaryAction={
+                      divider
+                      sx={{
+                        bgcolor: "action.hover",
+                        borderRadius: 1,
+                        mb: 1,
+                      }}
+                    >
+                      <ListItemText
+                        primary={`${entry.subject} (${entry.day})`}
+                        secondary={`${entry.startTime} - ${entry.endTime} | ${entry.mode} @ ${entry.room}`}
+                      />
+                      <ListItemSecondaryAction>
                         <IconButton
                           edge="end"
-                          onClick={() => removeScheduleEntry(index)}
+                          aria-label="delete"
+                          onClick={() => handleRemoveSchedule(index)}
                         >
                           <DeleteIcon />
                         </IconButton>
-                      }
-                    >
-                      <ListItemText
-                        primary={`${entry.day} - ${entry.subject}`}
-                        secondary={`Time: ${entry.startTime} to ${entry.endTime} | Mode: ${entry.mode} | Room: ${entry.room}`}
-                      />
+                      </ListItemSecondaryAction>
                     </ListItem>
                   ))}
                 </List>
-              </Box>
-            )}
+              )}
 
-            <Button variant="contained" type="submit" disabled={loading}>
-              {loading ? "Signing Up..." : "Sign Up"}
-            </Button>
-            <Typography align="center">
-              <Link to="/">BackToDashboard</Link>
-            </Typography>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={loading}
+                sx={{ mt: 3, mb: 2, py: 1.5 }}
+              >
+                {loading ? (
+                  <CircularProgress size={24} color="inherit" />
+                ) : (
+                  "Create User"
+                )}
+              </Button>
+            </Box>
           </Box>
-        </form>
-      </Box>
+        </Container>
+      </ThemeProvider>
     </LocalizationProvider>
   );
-};
+}
 
-export default SignUp;
+export default App;
