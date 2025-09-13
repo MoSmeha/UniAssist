@@ -27,7 +27,7 @@ import NotificationsIcon from "@mui/icons-material/Notifications";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import Avatar from "@mui/material/Avatar";
-
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 import { AccountPreview } from "@toolpad/core/Account";
 import { AppProvider } from "@toolpad/core/AppProvider";
 import { DashboardLayout, ThemeSwitcher } from "@toolpad/core/DashboardLayout";
@@ -38,7 +38,6 @@ import useLogout from "./hooks/useLogout";
 import useConversationStore from "./zustand/useConversationStore";
 
 import ChatApp from "./pages/ChatApp/ChatApp";
-import SignUp from "./pages/signup/SignUp";
 import ScheduleTable from "./pages/Schedule/ScheduleComponent";
 import TODO from "./pages/TodoList/TodoList";
 import StaffList from "./pages/StaffInfo/StaffList";
@@ -59,6 +58,7 @@ import React from "react";
 import { useSocketStore } from "./zustand/SocketStore";
 import CafeteriaMenu from "./pages/Cafeteria Menu/CafeteriaMenu";
 
+import AdminPanel from "./pages/AdminPanel/AdminPanel";
 const demoTheme = createTheme({
   cssVariables: { colorSchemeSelector: "data-toolpad-color-scheme" },
   colorSchemes: { light: true, dark: true },
@@ -79,7 +79,7 @@ const routes = {
   "/tools/Pomodoro": <PomodoroTimer />,
   "/announcements": <Announcements />,
   "/tools/AIBot": <ChatbotFrontend />,
-  "/SignUp": <SignUp />,
+  "/UserManagement": <AdminPanel />,
   "/LostandFound": <LostAndFoundPage />,
   "/appointmentBooking": <AppointmentManager />,
   "/Profile": <Profile />,
@@ -339,7 +339,11 @@ function DashboardLayoutBasic({ window }) {
   const adminNavigation =
     authUser?.role === "admin"
       ? [
-          { segment: "SignUp", title: "SignUp", icon: <InputIcon /> },
+          {
+            segment: "UserManagement",
+            title: "Users",
+            icon: <ManageAccountsIcon />,
+          },
           { segment: "ContactUs", title: "ContactUs", icon: <DateRangeIcon /> },
         ]
       : [];

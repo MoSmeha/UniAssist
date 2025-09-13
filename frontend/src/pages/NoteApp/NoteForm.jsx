@@ -48,6 +48,7 @@ const NoteForm = ({ open, onClose, note, onSave }) => {
     tags: [],
   });
   const [tagInput, setTagInput] = useState("");
+  const [isFormDirty, setIsFormDirty] = useState(false); // New state to track if form has been submitted
 
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === "dark";
@@ -71,10 +72,12 @@ const NoteForm = ({ open, onClose, note, onSave }) => {
       });
     }
     setTagInput("");
+    setIsFormDirty(false); // Reset dirty state on dialog open/close
   }, [note, open]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsFormDirty(true); // Mark form as dirty on submit attempt
     if (!formData.title.trim() || !formData.content.trim()) return;
     await onSave(formData);
     onClose();
@@ -116,7 +119,6 @@ const NoteForm = ({ open, onClose, note, onSave }) => {
       maxWidth="sm"
       PaperProps={{
         sx: {
-          borderRadius: theme.shape.borderRadius * 2,
           minHeight: "400px",
           backgroundColor: theme.palette.background.paper,
         },
@@ -151,9 +153,9 @@ const NoteForm = ({ open, onClose, note, onSave }) => {
             onChange={handleChange("title")}
             sx={{ mb: 2 }}
             required
-            error={!formData.title.trim() && open}
+            error={isFormDirty && !formData.title.trim()} // Updated logic
             helperText={
-              !formData.title.trim() && open ? "Title is required" : ""
+              isFormDirty && !formData.title.trim() ? "Title is required" : "" // Updated logic
             }
             InputLabelProps={{
               style: { color: theme.palette.text.secondary },
@@ -174,9 +176,11 @@ const NoteForm = ({ open, onClose, note, onSave }) => {
             onChange={handleChange("content")}
             sx={{ mb: 2 }}
             required
-            error={!formData.content.trim() && open}
+            error={isFormDirty && !formData.content.trim()} // Updated logic
             helperText={
-              !formData.content.trim() && open ? "Content is required" : ""
+              isFormDirty && !formData.content.trim()
+                ? "Content is required"
+                : "" // Updated logic
             }
             InputLabelProps={{
               style: { color: theme.palette.text.secondary },

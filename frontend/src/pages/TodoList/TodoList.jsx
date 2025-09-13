@@ -36,9 +36,13 @@ import {
 } from "@mui/icons-material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { MobileDatePicker } from "@mui/x-date-pickers/MobileDatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import dayjs from "dayjs";
+import customParseFormat from "dayjs/plugin/customParseFormat"; // <-- Import plugin
 import toast from "react-hot-toast";
+
+dayjs.extend(customParseFormat); // <-- Extend dayjs with the plugin
 
 const TODO = () => {
   const theme = useTheme();
@@ -49,7 +53,7 @@ const TODO = () => {
   const priorityColors = {
     Top: {
       border: isDarkMode ? theme.palette.error.dark : theme.palette.error.main,
-      chip: isDarkMode ? theme.palette.error.dark : theme.palette.error.light, // Using light for chip background in dark mode for better contrast
+      chip: isDarkMode ? theme.palette.error.dark : theme.palette.error.light,
     },
     Moderate: {
       border: isDarkMode
@@ -60,7 +64,9 @@ const TODO = () => {
         : theme.palette.warning.light,
     },
     Low: {
-      border: isDarkMode ? theme.palette.success.dark : theme.palette.success.main,
+      border: isDarkMode
+        ? theme.palette.success.dark
+        : theme.palette.success.main,
       chip: isDarkMode
         ? theme.palette.success.dark
         : theme.palette.success.light,
@@ -77,11 +83,11 @@ const TODO = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    date: "",
-    startTime: "",
-    endTime: "",
+    date: null,
+    startTime: null,
+    endTime: null,
     completed: false,
-    priority: "Moderate", // default priority
+    priority: "Moderate",
   });
 
   const fetchTodos = async () => {
@@ -98,10 +104,8 @@ const TODO = () => {
     }
   };
 
-  // Count uncompleted tasks
   const uncompletedCount = todos.filter((todo) => !todo.completed).length;
 
-  // Apply priority filter
   useEffect(() => {
     if (priorityFilter === "All") {
       setFilteredTodos(todos);
@@ -124,11 +128,17 @@ const TODO = () => {
     }));
   };
 
-  const handleTimeChange = (field, value) => {
-    const formattedTime = value ? dayjs(value).format("HH:mm") : "";
+  const handleDateChange = (date) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: formattedTime,
+      date: date,
+    }));
+  };
+
+  const handleTimeChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value ? dayjs(value).format("HH:mm") : null,
     }));
   };
 
@@ -162,9 +172,9 @@ const TODO = () => {
     setFormData({
       title: "",
       description: "",
-      date: "",
-      startTime: "",
-      endTime: "",
+      date: null,
+      startTime: null,
+      endTime: null,
       completed: false,
       priority: "Moderate",
     });
@@ -177,9 +187,9 @@ const TODO = () => {
     setFormData({
       title: todo.title,
       description: todo.description,
-      date: todo.date.split("T")[0],
-      startTime: todo.startTime,
-      endTime: todo.endTime,
+      date: todo.date ? dayjs(todo.date) : null,
+      startTime: todo.startTime ? dayjs(todo.startTime, "HH:mm") : null,
+      endTime: todo.endTime ? dayjs(todo.endTime, "HH:mm") : null,
       completed: todo.completed,
       priority: todo.priority,
     });
@@ -192,12 +202,19 @@ const TODO = () => {
     e.preventDefault();
     setLoading(true);
 
+    const payload = {
+      ...formData,
+      date: formData.date ? formData.date.toISOString() : null,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+    };
+
     try {
       if (editMode) {
         const response = await fetch(`/api/todo/${editingTodoId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
@@ -207,7 +224,7 @@ const TODO = () => {
         const response = await fetch("/api/todo", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         });
 
         if (!response.ok) {
@@ -252,34 +269,35 @@ const TODO = () => {
 
   return (
     <>
-      <AppBar
-        position="static"
-        elevation={4} // Consistent elevation
-        color="primary" // Use primary color from theme
-      >
+      <AppBar position="static" elevation={4} color="primary">
         <Toolbar
           sx={{
             display: "flex",
-            flexDirection: { xs: "column", sm: "row" }, // Stack vertically on mobile
-            alignItems: { xs: "flex-start", sm: "center" }, // Align items
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
             py: { xs: 1, sm: 1 },
             gap: { xs: 1, sm: 2 },
-            flexWrap: "wrap", // Allow wrapping on smaller screens
+            flexWrap: "wrap",
           }}
         >
-
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ flexGrow: 1, fontWeight: 700 }}
+          >
+            My TODO List
+          </Typography>
 
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
               gap: { xs: 1, sm: 2 },
-              width: { xs: "100%", sm: "auto" }, // Full width on mobile
-              justifyContent: { xs: "space-between", sm: "flex-end" }, // Space between on mobile, end on desktop
-              flexWrap: "wrap", // Allow wrapping for filter and button
+              width: { xs: "100%", sm: "auto" },
+              justifyContent: { xs: "space-between", sm: "flex-end" },
+              flexWrap: "wrap",
             }}
           >
-            {/* Uncompleted tasks counter */}
             <Chip
               icon={<TaskIcon fontSize="small" />}
               label={
@@ -288,22 +306,20 @@ const TODO = () => {
                 </Typography>
               }
               sx={{
-                color: theme.palette.primary.contrastText, // Text color from theme
-                backgroundColor: theme.palette.action.selected, // A subtle background
+                color: theme.palette.primary.contrastText,
+                backgroundColor: theme.palette.action.selected,
                 "& .MuiChip-icon": {
                   color: theme.palette.primary.contrastText,
                 },
               }}
             />
 
-            {/* Priority filter */}
             <FormControl
               size="small"
               sx={{
                 minWidth: { xs: 120, sm: 140 },
                 "& .MuiOutlinedInput-root": {
                   borderRadius: 2,
-                  // Use theme colors for better consistency
                   backgroundColor: theme.palette.action.hover,
                   "& fieldset": {
                     borderColor: theme.palette.divider,
@@ -316,7 +332,7 @@ const TODO = () => {
                   },
                 },
                 "& .MuiSelect-select": {
-                  paddingRight: "32px !important", // Ensure space for dropdown icon
+                  paddingRight: "32px !important",
                 },
               }}
             >
@@ -355,7 +371,6 @@ const TODO = () => {
               </Select>
             </FormControl>
 
-            {/* Add task button */}
             <Button
               variant="contained"
               onClick={handleOpenForm}
@@ -365,7 +380,6 @@ const TODO = () => {
                 px: 2,
                 borderRadius: 2,
                 fontWeight: 600,
-                // Use default contained button colors, which adapt to theme
               }}
             >
               {isMobile ? "" : "Add Task"}
@@ -378,7 +392,7 @@ const TODO = () => {
         sx={{
           mt: 4,
           px: isMobile ? 1 : 3,
-          maxWidth: "md", // Use a fixed max width for better layout control
+          maxWidth: "md",
         }}
       >
         {filteredTodos.length === 0 ? (
@@ -411,7 +425,7 @@ const TODO = () => {
                   borderRadius: 2,
                   overflow: "hidden",
                   transition: "all 0.2s",
-                  opacity: todo.completed ? 0.6 : 1, // Slightly more opaque when completed
+                  opacity: todo.completed ? 0.6 : 1,
                   borderTop: `4px solid ${
                     priorityColors[todo.priority]?.border || "transparent"
                   }`,
@@ -420,17 +434,18 @@ const TODO = () => {
                   },
                 }}
               >
-                <Accordion disableGutters expanded={false} // Control expansion manually if needed or set to true for always expanded
+                <Accordion
+                  disableGutters
                   sx={{
                     "& .MuiAccordionSummary-root": {
-                      minHeight: 64, // Ensure consistent height
-                      flexDirection: "row-reverse", // Place expand icon on left
+                      minHeight: 64,
+                      flexDirection: "row-reverse",
                       "& .MuiAccordionSummary-expandIconWrapper": {
-                        transform: "none", // Remove initial rotation
-                        mr: 1, // Margin right for icon
+                        transform: "none",
+                        mr: 1,
                       },
                       "& .MuiAccordionSummary-expandIconWrapper.Mui-expanded": {
-                        transform: "rotate(180deg)", // Rotate on expand
+                        transform: "rotate(180deg)",
                       },
                     },
                     "& .MuiAccordionSummary-content": {
@@ -450,7 +465,7 @@ const TODO = () => {
                         alignItems: "center",
                         width: "100%",
                         gap: 1,
-                        flexWrap: "wrap", // Allow content to wrap
+                        flexWrap: "wrap",
                       }}
                     >
                       <Checkbox
@@ -473,7 +488,7 @@ const TODO = () => {
                           color: todo.completed
                             ? "text.secondary"
                             : "text.primary",
-                          wordBreak: "break-word", // Break long words
+                          wordBreak: "break-word",
                         }}
                       >
                         {todo.title}
@@ -483,12 +498,13 @@ const TODO = () => {
                         size="small"
                         sx={{
                           backgroundColor:
-                            priorityColors[todo.priority]?.chip || "transparent",
+                            priorityColors[todo.priority]?.chip ||
+                            "transparent",
                           color: theme.palette.getContrastText(
                             priorityColors[todo.priority]?.chip || "#ffffff"
                           ),
                           fontWeight: 500,
-                          height: 24, // Standard chip height
+                          height: 24,
                         }}
                       />
                       <Box
@@ -496,14 +512,17 @@ const TODO = () => {
                           display: "flex",
                           alignItems: "center",
                           gap: 0.5,
-                          ml: { xs: 0, sm: 2 }, // Margin left on larger screens
-                          mt: { xs: 1, sm: 0 }, // Margin top on mobile for date
-                          width: { xs: "100%", sm: "auto" }, // Full width on mobile
-                          justifyContent: { xs: "flex-end", sm: "flex-start" }, // Align date
+                          ml: { xs: 0, sm: 2 },
+                          mt: { xs: 1, sm: 0 },
+                          width: { xs: "100%", sm: "auto" },
+                          justifyContent: { xs: "flex-end", sm: "flex-start" },
                         }}
                       >
                         <EventIcon fontSize="small" color="action" />
-                        <Typography variant="caption" sx={{ whiteSpace: "nowrap" }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ whiteSpace: "nowrap" }}
+                        >
                           {dayjs(todo.date).format("MMM DD, YYYY")}
                         </Typography>
                       </Box>
@@ -518,16 +537,14 @@ const TODO = () => {
                       sx={{
                         fontStyle: "italic",
                         color: "grey.600",
-                        display: "block", // Ensure it takes its own line
+                        display: "block",
                         mb: 1,
                       }}
                     >
                       {todo.startTime && todo.endTime
                         ? `${dayjs(todo.startTime, "HH:mm").format(
                             "h:mm A"
-                          )} - ${dayjs(todo.endTime, "HH:mm").format(
-                            "h:mm A"
-                          )}`
+                          )} - ${dayjs(todo.endTime, "HH:mm").format("h:mm A")}`
                         : "Time not specified"}
                     </Typography>
 
@@ -617,29 +634,30 @@ const TODO = () => {
                 required
                 variant="outlined"
                 select
-                SelectProps={{ native: true }}
                 sx={{ mb: 2 }}
               >
-                <option value="Top">Top</option>
-                <option value="Moderate">Moderate</option>
-                <option value="Low">Low</option>
+                <MenuItem value="Top">Top</MenuItem>
+                <MenuItem value="Moderate">Moderate</MenuItem>
+                <MenuItem value="Low">Low</MenuItem>
               </TextField>
 
-              <TextField
-                margin="dense"
-                label="Date"
-                name="date"
-                type="date"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                value={formData.date}
-                onChange={handleChange}
-                required
-                variant="outlined"
-                sx={{ mb: 2 }}
-              />
-
               <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <MobileDatePicker
+                  label="Date"
+                  value={formData.date ? dayjs(formData.date) : null}
+                  onChange={handleDateChange}
+                  disablePast
+                  slotProps={{
+                    textField: {
+                      required: true,
+                      variant: "outlined",
+                      fullWidth: true,
+                      margin: "dense",
+                      sx: { mb: 2 },
+                    },
+                  }}
+                />
+
                 <Box
                   sx={{
                     display: "flex",

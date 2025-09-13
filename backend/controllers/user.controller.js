@@ -1,6 +1,7 @@
 //user.controller.js
 
 import { User } from "../models/user.model.js";
+import bcrypt from "bcryptjs";
 
 export const getUsers = async (req, res) => {
   try {
@@ -20,9 +21,7 @@ export const getUsers = async (req, res) => {
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findById(id)
-      .select("-password")
-      .lean();
+    const user = await User.findById(id).select("-password").lean();
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
   } catch (err) {
@@ -36,10 +35,7 @@ export const updateProfilePic = async (req, res) => {
     const { id } = req.params;
 
     // 1) Authorize: only the user themself (or an admin) may change their pic
-    if (
-      req.user._id.toString() !== id &&
-      req.user.role !== "admin"
-    ) {
+    if (req.user._id.toString() !== id && req.user.role !== "admin") {
       return res.status(403).json({ message: "Forbidden" });
     }
 
@@ -65,11 +61,19 @@ export const updateProfilePic = async (req, res) => {
   }
 };
 
-
 export const editUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedUser = await User.findByIdAndUpdate(id, req.body, {
+    const updatedData = req.body;
+
+    // Check if the password field is being updated
+    if (updatedData.password) {
+      // Hash the new password before saving it
+      const salt = await bcrypt.genSalt(10);
+      updatedData.password = await bcrypt.hash(updatedData.password, salt);
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(id, updatedData, {
       new: true, // Return the updated document
       runValidators: true, // Run schema validators on update
     }).select("-password");
@@ -84,7 +88,6 @@ export const editUser = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 export const deleteUser = async (req, res) => {
   try {

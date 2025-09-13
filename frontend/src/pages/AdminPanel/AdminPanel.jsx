@@ -1,15 +1,25 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
-  Container,
   Box,
-  TextField,
-  Button,
   Typography,
-  Grid,
-  Select,
-  MenuItem,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Paper,
+  Button,
+  TextField,
   FormControl,
   InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   CircularProgress,
   Divider,
   List,
@@ -19,14 +29,13 @@ import {
   IconButton,
   CssBaseline,
 } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { MobileTimePicker } from "@mui/x-date-pickers/MobileTimePicker";
-import dayjs from "dayjs";
 import toast, { Toaster } from "react-hot-toast";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { CSVLink } from "react-csv";
 
+// --- Data Definitions ---
 const MAJORS = [
   "Computer Science",
   "Computer Engineering",
@@ -68,7 +77,48 @@ const DAYS = [
 ];
 const MODES = ["campus", "online"];
 
-function App() {
+// --- CSV Headers ---
+const headers = [
+  { label: "University ID", key: "uniId" },
+  { label: "First Name", key: "firstName" },
+  { label: "Last Name", key: "lastName" },
+  { label: "Email", key: "email" },
+  { label: "Gender", key: "gender" },
+  { label: "Role", key: "role" },
+  { label: "Department", key: "Department" },
+  { label: "Title", key: "title" },
+  { label: "Major", key: "major" },
+];
+
+const AdminPanel = () => {
+  const [users, setUsers] = useState([]);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [openFormDialog, setOpenFormDialog] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formState, setFormState] = useState({
+    _id: null,
+    uniId: "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    gender: "",
+    role: "",
+    Department: "",
+    title: "",
+    major: "",
+    schedule: [],
+  });
+  const [scheduleEntry, setScheduleEntry] = useState({
+    day: "",
+    subject: "",
+    startTime: "",
+    endTime: "",
+    mode: "",
+    room: "",
+  });
+
   const [mode, setMode] = useState("light");
 
   const theme = useMemo(
@@ -109,34 +159,27 @@ function App() {
     [mode]
   );
 
-  const [formData, setFormData] = useState({
-    uniId: "",
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    gender: "",
-    role: "",
-    Department: "",
-    title: "",
-    major: "",
-    schedule: [],
-  });
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("/api/users");
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch users");
+      }
+      setUsers(data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users.");
+    }
+  };
 
-  const [scheduleEntry, setScheduleEntry] = useState({
-    day: "",
-    subject: "",
-    startTime: null,
-    endTime: null,
-    mode: "",
-    room: "",
-  });
-
-  const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => {
+    setFormState((prev) => {
       const newState = { ...prev, [name]: value };
       if (name === "role") {
         newState.title = "";
@@ -151,26 +194,20 @@ function App() {
     setScheduleEntry((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleTimeChange = (newValue, fieldName) => {
-    setScheduleEntry((prev) => ({ ...prev, [fieldName]: newValue }));
+  const handleTimeChange = (e, fieldName) => {
+    setScheduleEntry((prev) => ({ ...prev, [fieldName]: e.target.value }));
   };
 
   const handleAddSchedule = () => {
     const newScheduleEntry = {
       ...scheduleEntry,
-      startTime: scheduleEntry.startTime
-        ? dayjs(scheduleEntry.startTime).format("HH:mm")
-        : "",
-      endTime: scheduleEntry.endTime
-        ? dayjs(scheduleEntry.endTime).format("HH:mm")
-        : "",
     };
 
     if (Object.values(newScheduleEntry).some((field) => field === "")) {
       toast.error("Please fill all schedule fields before adding.");
       return;
     }
-    setFormData((prev) => ({
+    setFormState((prev) => ({
       ...prev,
       schedule: [...prev.schedule, newScheduleEntry],
     }));
@@ -178,15 +215,15 @@ function App() {
     setScheduleEntry({
       day: "",
       subject: "",
-      startTime: null,
-      endTime: null,
+      startTime: "",
+      endTime: "",
       mode: "",
       room: "",
     });
   };
 
   const handleRemoveSchedule = (indexToRemove) => {
-    setFormData((prev) => ({
+    setFormState((prev) => ({
       ...prev,
       schedule: prev.schedule.filter((_, index) => index !== indexToRemove),
     }));
@@ -196,14 +233,23 @@ function App() {
     e.preventDefault();
     setLoading(true);
 
-    const submissionData = { ...formData };
-    if (formData.role !== "student") delete submissionData.major;
-    if (formData.role !== "teacher" && formData.role !== "admin")
+    const submissionData = { ...formState };
+    if (formState.role !== "student") delete submissionData.major;
+    if (formState.role !== "teacher" && formState.role !== "admin")
       delete submissionData.title;
 
+    const isEditing = !!formState._id;
+
+    if (isEditing && !formState.password) {
+      delete submissionData.password;
+    }
+
+    const url = isEditing ? `/api/users/${formState._id}` : "/api/auth/signup";
+    const method = isEditing ? "PUT" : "POST";
+
     try {
-      const response = await fetch("/api/auth/signup", {
-        method: "POST",
+      const response = await fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -213,63 +259,225 @@ function App() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to sign up user.");
+        throw new Error(
+          result.error || `Failed to ${isEditing ? "update" : "sign up"} user.`
+        );
       }
 
       toast.success(
-        `User ${result.firstName} ${result.lastName} created successfully!`
+        `User ${result.firstName} ${result.lastName} ${
+          isEditing ? "updated" : "created"
+        } successfully!`
       );
-      setFormData({
-        uniId: "",
-        firstName: "",
-        lastName: "",
-        email: "",
-        password: "",
-        gender: "",
-        role: "",
-        Department: "",
-        title: "",
-        major: "",
-        schedule: [],
-      });
+      resetForm();
+      setOpenFormDialog(false);
+      fetchUsers();
     } catch (err) {
       toast.error(err.message);
-      console.error("Signup failed:", err);
+      console.error("Submission failed:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleCreateUserClick = () => {
+    resetForm();
+    setOpenFormDialog(true);
+  };
+
+  const handleEdit = (user) => {
+    setFormState({
+      _id: user._id,
+      uniId: user.uniId,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: "",
+      gender: user.gender,
+      role: user.role,
+      Department: user.Department,
+      title: user.title || "",
+      major: user.major || "",
+      schedule: user.schedule || [],
+    });
+    setOpenFormDialog(true);
+  };
+
+  const handleCloseFormDialog = () => {
+    setOpenFormDialog(false);
+    resetForm();
+  };
+
+  const handleDeleteClick = (user) => {
+    setUserToDelete(user);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    setOpenDeleteDialog(false);
+    try {
+      const response = await fetch(`/api/users/${userToDelete._id}`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to delete user");
+      }
+      toast.success("User deleted successfully!");
+      fetchUsers();
+    } catch (error) {
+      console.error("Delete error:", error);
+      toast.error("Failed to delete user.");
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setOpenDeleteDialog(false);
+    setUserToDelete(null);
+  };
+
+  const resetForm = () => {
+    setFormState({
+      _id: null,
+      uniId: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      gender: "",
+      role: "",
+      Department: "",
+      title: "",
+      major: "",
+      schedule: [],
+    });
+  };
+
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Toaster position="top-center" />
-        <Container component="main" maxWidth="md">
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Toaster position="top-center" />
+      <Box sx={{ p: { xs: 3, md: 6 } }}>
+        <Paper elevation={3} sx={{ p: 4, borderRadius: "12px" }}>
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            align="center"
+            sx={{ fontWeight: "bold" }}
+          >
+            Admin User Management
+          </Typography>
+
+          {/* This Box now wraps the heading and the buttons */}
           <Box
             sx={{
               display: "flex",
-              flexDirection: "column",
+              justifyContent: "center",
               alignItems: "center",
-              padding: 4,
-              borderRadius: 2,
-              boxShadow: 3,
-              backgroundColor: "background.paper",
+              mt: 4,
+              mb: 2, // Adjusted margin to provide space before the table
             }}
           >
-            <Typography component="h1" variant="h4" gutterBottom>
-              Create New User
-            </Typography>
-            <Typography
-              component="p"
-              variant="subtitle1"
-              color="text.secondary"
-              align="center"
-              sx={{ mb: 3 }}
-            >
-              Fill in the details below to create a new user account.
-            </Typography>
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleCreateUserClick}
+              >
+                Create New User
+              </Button>
+              <CSVLink
+                data={users}
+                headers={headers}
+                filename={"users-data.csv"}
+                style={{ textDecoration: "none" }}
+              >
+                <Button variant="outlined" color="primary">
+                  Export to CSV
+                </Button>
+              </CSVLink>
+            </Box>
+          </Box>
 
+          <Box sx={{ overflowX: "auto" }}>
+            <TableContainer component={Paper} sx={{ borderRadius: "8px" }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>ID</TableCell>
+                    <TableCell>Name</TableCell>
+                    <TableCell>Email</TableCell>
+                    <TableCell>Role</TableCell>
+                    <TableCell>Department</TableCell>
+                    <TableCell align="right">Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {users.length > 0 ? (
+                    users.map((user) => (
+                      <TableRow key={user._id} hover>
+                        <TableCell sx={{ fontSize: "0.875rem" }}>
+                          {user.uniId}
+                        </TableCell>
+                        <TableCell sx={{ fontSize: "0.875rem" }}>
+                          {user.firstName} {user.lastName}
+                        </TableCell>
+                        <TableCell sx={{ fontSize: "0.875rem" }}>
+                          {user.email}
+                        </TableCell>
+                        <TableCell sx={{ fontSize: "0.875rem" }}>
+                          {user.role}
+                        </TableCell>
+                        <TableCell sx={{ fontSize: "0.875rem" }}>
+                          {user.Department}
+                        </TableCell>
+                        <TableCell align="right">
+                          <IconButton
+                            aria-label="edit"
+                            color="primary"
+                            onClick={() => handleEdit(user)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                          <IconButton
+                            aria-label="delete"
+                            color="error"
+                            onClick={() => handleDeleteClick(user)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={6}
+                        align="center"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        No users found.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
+        </Paper>
+
+        {/* Create/Edit User Form Dialog */}
+        <Dialog
+          open={openFormDialog}
+          onClose={handleCloseFormDialog}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            {formState._id ? "Edit User" : "Add New User"}
+          </DialogTitle>
+          <DialogContent>
             <Box
               component="form"
               noValidate
@@ -283,7 +491,7 @@ function App() {
                     required
                     fullWidth
                     label="First Name"
-                    value={formData.firstName}
+                    value={formState.firstName}
                     onChange={handleChange}
                   />
                 </Grid>
@@ -293,7 +501,7 @@ function App() {
                     fullWidth
                     label="Last Name"
                     name="lastName"
-                    value={formData.lastName}
+                    value={formState.lastName}
                     onChange={handleChange}
                   />
                 </Grid>
@@ -303,7 +511,7 @@ function App() {
                     fullWidth
                     label="University ID"
                     name="uniId"
-                    value={formData.uniId}
+                    value={formState.uniId}
                     onChange={handleChange}
                   />
                 </Grid>
@@ -312,7 +520,7 @@ function App() {
                     <InputLabel>Gender</InputLabel>
                     <Select
                       name="gender"
-                      value={formData.gender}
+                      value={formState.gender}
                       label="Gender"
                       onChange={handleChange}
                     >
@@ -331,19 +539,19 @@ function App() {
                     label="Email Address"
                     name="email"
                     type="email"
-                    value={formData.email}
+                    value={formState.email}
                     onChange={handleChange}
                   />
                 </Grid>
                 <Grid item xs={12}>
                   <TextField
-                    required
                     fullWidth
                     name="password"
                     label="Password"
                     type="password"
-                    value={formData.password}
+                    value={formState.password}
                     onChange={handleChange}
+                    required={!formState._id}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -351,7 +559,7 @@ function App() {
                     <InputLabel>Role</InputLabel>
                     <Select
                       name="role"
-                      value={formData.role}
+                      value={formState.role}
                       label="Role"
                       onChange={handleChange}
                     >
@@ -368,7 +576,7 @@ function App() {
                     <InputLabel>Department</InputLabel>
                     <Select
                       name="Department"
-                      value={formData.Department}
+                      value={formState.Department}
                       label="Department"
                       onChange={handleChange}
                     >
@@ -380,13 +588,13 @@ function App() {
                     </Select>
                   </FormControl>
                 </Grid>
-                {formData.role === "student" && (
+                {formState.role === "student" && (
                   <Grid item xs={12}>
                     <FormControl fullWidth required>
                       <InputLabel>Major</InputLabel>
                       <Select
                         name="major"
-                        value={formData.major}
+                        value={formState.major}
                         label="Major"
                         onChange={handleChange}
                       >
@@ -399,13 +607,14 @@ function App() {
                     </FormControl>
                   </Grid>
                 )}
-                {(formData.role === "teacher" || formData.role === "admin") && (
+                {(formState.role === "teacher" ||
+                  formState.role === "admin") && (
                   <Grid item xs={12}>
                     <FormControl fullWidth required>
                       <InputLabel>Title</InputLabel>
                       <Select
                         name="title"
-                        value={formData.title}
+                        value={formState.title}
                         label="Title"
                         onChange={handleChange}
                       >
@@ -459,23 +668,25 @@ function App() {
                   </FormControl>
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                  <MobileTimePicker
+                  <TextField
                     label="Start Time"
+                    type="time"
+                    name="startTime"
                     value={scheduleEntry.startTime}
-                    onChange={(newValue) =>
-                      handleTimeChange(newValue, "startTime")
-                    }
-                    slotProps={{ textField: { fullWidth: true } }}
+                    onChange={(e) => handleTimeChange(e, "startTime")}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={6} sm={3}>
-                  <MobileTimePicker
+                  <TextField
                     label="End Time"
+                    type="time"
+                    name="endTime"
                     value={scheduleEntry.endTime}
-                    onChange={(newValue) =>
-                      handleTimeChange(newValue, "endTime")
-                    }
-                    slotProps={{ textField: { fullWidth: true } }}
+                    onChange={(e) => handleTimeChange(e, "endTime")}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={6} sm={3}>
@@ -516,9 +727,9 @@ function App() {
                 </Grid>
               </Grid>
 
-              {formData.schedule.length > 0 && (
+              {formState.schedule.length > 0 && (
                 <List sx={{ mt: 2 }}>
-                  {formData.schedule.map((entry, index) => (
+                  {formState.schedule.map((entry, index) => (
                     <ListItem
                       key={index}
                       divider
@@ -545,26 +756,60 @@ function App() {
                   ))}
                 </List>
               )}
-
-              <Button
-                type="submit"
-                fullWidth
-                variant="contained"
-                disabled={loading}
-                sx={{ mt: 3, mb: 2, py: 1.5 }}
-              >
-                {loading ? (
-                  <CircularProgress size={24} color="inherit" />
-                ) : (
-                  "Create User"
-                )}
-              </Button>
             </Box>
-          </Box>
-        </Container>
-      </ThemeProvider>
-    </LocalizationProvider>
-  );
-}
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 3, pt: 0 }}>
+            <Button
+              variant="outlined"
+              color="secondary"
+              onClick={handleCloseFormDialog}
+              sx={{ flexGrow: 1 }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading}
+              onClick={handleSubmit}
+              sx={{ flexGrow: 1 }}
+            >
+              {loading ? (
+                <CircularProgress size={24} color="inherit" />
+              ) : formState._id ? (
+                "Update User"
+              ) : (
+                "Create User"
+              )}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-export default App;
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={openDeleteDialog} onClose={handleDeleteCancel}>
+          <DialogTitle>Confirm Deletion</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete user "{userToDelete?.firstName}{" "}
+              {userToDelete?.lastName}"? This action cannot be undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleDeleteCancel} color="primary">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteConfirm}
+              color="error"
+              variant="contained"
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Box>
+    </ThemeProvider>
+  );
+};
+
+export default AdminPanel;

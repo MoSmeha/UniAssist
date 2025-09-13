@@ -22,6 +22,7 @@
     "dayjs": "^1.11.13",
     "howler": "^2.2.4",
     "react": "^18.2.0",
+    "react-csv": "^2.2.2",
     "react-dom": "^18.2.0",
     "react-hot": "^0.0.1",
     "react-hot-toast": "^2.5.2",
