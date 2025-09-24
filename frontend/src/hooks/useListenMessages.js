@@ -1,18 +1,17 @@
 import { useEffect } from "react";
 import useConversation from "../zustand/useConversation";
-import { useSocketStore } from "../zustand/SocketStore"; // Import Zustand store
+import { useSocketStore } from "../zustand/SocketStore";
 
 const useListenMessages = () => {
   const socket = useSocketStore((state) => state.socket);
-  const { messages, setMessages } = useConversation();
+  const { setMessages } = useConversation();
 
   useEffect(() => {
-    socket?.on("newMessage", (newMessage) => {
-      setMessages([...messages, newMessage]);
-    });
-
-    return () => socket?.off("newMessage");
-  }, [socket, setMessages, messages]);
+    if (!socket) return;
+    const handler = (newMessage) => setMessages(prev => [...prev, newMessage]);
+    socket.on("newMessage", handler);
+    return () => socket.off("newMessage", handler);
+  }, [socket, setMessages]);
 };
 
 export default useListenMessages;
