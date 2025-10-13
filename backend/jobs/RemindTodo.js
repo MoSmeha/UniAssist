@@ -3,11 +3,23 @@ import notificationService from "../utils/NotificationService.js";
 
 const SYSTEM_SENDER_ID = process.env.SYSTEM_SENDER_ID;
 
-function combineDateAndTime(date, timeStr) {
-  // date is a Date object, timeStr is "HH:mm"
+// Combine date + time, handle crossing midnight if endTime < startTime
+function combineDateAndTime(date, timeStr, startTimeStr) {
   const [hours, minutes] = timeStr.split(":").map(Number);
   const combined = new Date(date);
   combined.setHours(hours, minutes, 0, 0);
+
+  // If startTimeStr is given, detect midnight rollover
+  if (startTimeStr) {
+    const [startHours, startMinutes] = startTimeStr.split(":").map(Number);
+    const startDateTime = new Date(date);
+    startDateTime.setHours(startHours, startMinutes, 0, 0);
+
+    if (combined < startDateTime) {
+      combined.setDate(combined.getDate() + 1); // push end time to next day
+    }
+  }
+
   return combined;
 }
 
@@ -18,12 +30,27 @@ export const sendTodoReminders = async () => {
   // Fetch all todos that are not completed
   const todos = await Todo.find({ completed: false });
 
-  // Filter todos whose end datetime is within 1 minute window around oneHourLater
-  const todosToNotify = todos.filter(todo => {
+  // Filter todos whose end datetime is ~1 hour from now (within 1 min window)
+  const todosToNotify = todos.filter((todo) => {
     if (!todo.date || !todo.endTime) return false;
-    const todoEndDateTime = combineDateAndTime(todo.date, todo.endTime);
-    return todoEndDateTime >= oneHourLater && todoEndDateTime < new Date(oneHourLater.getTime() + 60 * 1000);
+    const todoEndDateTime = combineDateAndTime(
+      todo.date,
+      todo.endTime,
+      todo.startTime
+    );
+
+    return (
+      todoEndDateTime >= oneHourLater &&
+      todoEndDateTime < new Date(oneHourLater.getTime() + 60 * 1000)
+    );
   });
+
+  // Debugging log
+  console.log(
+    `[${new Date().toISOString()}] Found ${
+      todosToNotify.length
+    } todos to notify.`
+  );
 
   for (const todo of todosToNotify) {
     const message = `Reminder: Your todo "${todo.title}" is ending in 1 hour.`;
@@ -39,5 +66,7 @@ export const sendTodoReminders = async () => {
       message,
       data,
     });
+
+    console.log(`Reminder sent for todo: ${todo.title} (end: ${todo.endTime})`);
   }
 };

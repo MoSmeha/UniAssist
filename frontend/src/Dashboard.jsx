@@ -338,7 +338,7 @@ function DashboardLayoutBasic({ window }) {
     { kind: "divider" },
     { kind: "header", title: "Personal" },
     { segment: "Profile", title: "Profile", icon: <AccountCircleIcon /> },
-    { segment: "UserManual", title: "Profile", icon: <InfoIcon /> },
+    { segment: "UserManual", title: "User Manual", icon: <InfoIcon /> },
   ];
 
   const adminNavigation =
