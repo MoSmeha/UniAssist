@@ -22,7 +22,8 @@ import ContactUsRoutes from "./routes/contactUs.routes.js";
 import { app, server } from "./socket/socket.js";
 
 import { sendAppointmentReminders } from "./jobs/RemindAppointment.js"
-import { sendTodoReminders } from "./jobs/RemindTodo.js"
+import { sendTodoReminders } from "./jobs/RemindTodo.js";
+import { rejectUnacceptedAppointments } from "./jobs/RejectUnacceptedAppointments.js";
 import cron from "node-cron";
 
 dotenv.config();
@@ -33,10 +34,10 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json()); // Middleware to parse JSON request bodies
 app.use(cookieParser()); // Middleware to parse cookies
 
-
 cron.schedule("* * * * *", async () => {
   await sendAppointmentReminders();
   await sendTodoReminders();
+  await rejectUnacceptedAppointments();
 });
 
 // API Routes
