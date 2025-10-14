@@ -8,14 +8,18 @@ import {
   Typography,
   Avatar,
   Box,
+  Badge,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
+import { useSocketStore } from "../../zustand/SocketStore";
 
 const TopBar = ({ contact, onBack, setSearchTerm }) => {
   const theme = useTheme();
   const [search, setSearch] = useState("");
+  const onlineUsers = useSocketStore((state) => state.onlineUsers);
+  const isOnline = contact && onlineUsers.includes(contact._id);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,7 +37,15 @@ const TopBar = ({ contact, onBack, setSearchTerm }) => {
 
         {contact ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-            <Avatar src={contact.profilePic} alt="user avatar" />
+            <Badge
+              color="success"
+              variant="dot"
+              invisible={!isOnline}
+              overlap="circular"
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            >
+              <Avatar src={contact.profilePic} alt="user avatar" />
+            </Badge>
             <Typography variant="h6">
               {contact.firstName + " " + contact.lastName}
             </Typography>

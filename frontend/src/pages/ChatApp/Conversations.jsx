@@ -14,6 +14,7 @@ const Conversations = ({ setSelectedContact, searchTerm }) => {
   const updateUnreadCount = useConversationStore(
     (state) => state.updateUnreadCount
   );
+  const markAsRead = useConversationStore((state) => state.markAsRead);
   const loading = useConversationStore((state) => state.loading);
 
   useEffect(() => {
@@ -52,17 +53,7 @@ const Conversations = ({ setSelectedContact, searchTerm }) => {
     setSelectedContact(conversation);
 
     // Reset unreadCount in zustand store
-    updateUnreadCount(conversation._id, 0);
-
-    // Call backend API to mark messages as read
-    fetch(`/api/messages/read/${conversation._id}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }).catch((error) => {
-      console.error("Failed to mark messages as read:", error);
-    });
+    markAsRead(conversation._id);
   };
 
   // Sort conversations so that those with unreadCount > 0 appear first

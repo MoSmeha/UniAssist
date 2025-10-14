@@ -18,13 +18,32 @@ const useConversationStore = create((set) => ({
       set({ loading: false });
     }
   },
+
   updateUnreadCount: (userId, unreadCount) =>
-    set((state) => {
-      const updatedConversations = state.conversations.map((conv) =>
+    set((state) => ({
+      conversations: state.conversations.map((conv) =>
         conv._id === userId ? { ...conv, unreadCount } : conv
-      );
-      return { conversations: updatedConversations };
-    }),
+      ),
+    })),
+
+  markAsRead: async (userId) => {
+    try {
+      const res = await fetch(`/api/messages/read/${userId}`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        throw new Error("Failed to mark messages as read");
+      }
+      set((state) => ({
+        conversations: state.conversations.map((conv) =>
+          conv._id === userId ? { ...conv, unreadCount: 0 } : conv
+        ),
+      }));
+    } catch (error) {
+      console.error(error.message);
+    }
+  },
+
 }));
 
 export default useConversationStore;
