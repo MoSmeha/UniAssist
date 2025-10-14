@@ -1,7 +1,9 @@
 import { useLostAndFoundStore } from "../../zustand/useLostFoundstore";
 import { Box, Pagination } from "@mui/material";
 
-const PaginationControls = () => {
+import { memo } from 'react';
+
+const PaginationControls = memo(() => {
   const { pagination, setPage } = useLostAndFoundStore();
 
   const handleChange = (event, value) => {
@@ -22,6 +24,6 @@ const PaginationControls = () => {
       />
     </Box>
   );
-};
+});
 
 export default PaginationControls;

@@ -37,7 +37,9 @@ const CATEGORIES = [
   "Other",
 ];
 
-const CreateItemModal = ({ open, handleClose }) => {
+import { memo } from "react";
+
+const CreateItemModal = memo(({ open, handleClose }) => {
   const { createItem, error, loading } = useLostAndFoundStore();
   const [formData, setFormData] = useState({
     title: "",
@@ -227,6 +229,6 @@ const CreateItemModal = ({ open, handleClose }) => {
       </Box>
     </Modal>
   );
-};
+});
 
 export default CreateItemModal;

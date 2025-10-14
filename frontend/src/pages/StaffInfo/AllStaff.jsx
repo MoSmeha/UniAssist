@@ -1,9 +1,19 @@
+import { memo, useEffect } from 'react';
 import { List, Box, CircularProgress, Typography } from "@mui/material";
-import useGetStaff from "../../hooks/useGetStaff";
+import useStaffStore from "../../zustand/useStaffStore";
 import StaffCard from "./StaffCard";
 
-const AllStaff = ({ searchTerm }) => {
-  const { loading, staff } = useGetStaff();
+const AllStaff = () => {
+  const {
+    staff,
+    loading,
+    searchTerm,
+    fetchStaff
+  } = useStaffStore();
+
+  useEffect(() => {
+    fetchStaff();
+  }, [fetchStaff]);
 
   // Filter conversations based on searchTerm
   const fitlteredUsers = searchTerm
@@ -43,4 +53,4 @@ const AllStaff = ({ searchTerm }) => {
   );
 };
 
-export default AllStaff;
+export default memo(AllStaff);

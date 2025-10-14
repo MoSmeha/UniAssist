@@ -16,7 +16,9 @@ const CATEGORIES = [
   "Other",
 ];
 
-const FilterControls = () => {
+import { memo } from 'react';
+
+const FilterControls = memo(() => {
   const { filters, setFilters } = useLostAndFoundStore();
 
   const handleChange = (event) => {
@@ -85,6 +87,6 @@ const FilterControls = () => {
 </Grid>
     </Box>
   );
-};
+});
 
 export default FilterControls;

@@ -7,7 +7,9 @@ import {
   Typography,
 } from "@mui/material";
 
-const StaffCard = ({ staffMember, lastIdx }) => {
+import { memo } from 'react';
+
+const StaffCard = memo(({ staffMember, lastIdx }) => {
   console.log(staffMember);
   return (
     <>
@@ -64,6 +66,6 @@ const StaffCard = ({ staffMember, lastIdx }) => {
       {!lastIdx && <Divider variant="inset" component="li" />}
     </>
   );
-};
+});
 
 export default StaffCard;

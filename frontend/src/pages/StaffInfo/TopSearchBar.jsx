@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { memo, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -10,13 +10,13 @@ import {
   Box,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTheme } from "@mui/material/styles";
-import useConversation from "../../zustand/useConversation";
+import useStaffStore from '../../zustand/useStaffStore';
 
-const TopSearchBar = ({ setSearchTerm }) => {
+const TopSearchBar = () => {
   const theme = useTheme();
   const [search, setSearch] = useState("");
+  const { setSearchTerm } = useStaffStore();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -54,7 +54,9 @@ const TopSearchBar = ({ setSearchTerm }) => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon sx={{ color: theme.palette.text.primary }} />
+                  <IconButton type="submit">
+                    <SearchIcon sx={{ color: theme.palette.text.primary }} />
+                  </IconButton>
                 </InputAdornment>
               ),
             }}
@@ -64,4 +66,4 @@ const TopSearchBar = ({ setSearchTerm }) => {
     </AppBar>
   );
 };
-export default TopSearchBar;
+export default memo(TopSearchBar);

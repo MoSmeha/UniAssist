@@ -2,7 +2,9 @@ import { useLostAndFoundStore } from "../../zustand/useLostFoundstore";
 import { Grid, Typography, Box } from "@mui/material";
 import ItemCard from "./ItemCard";
 
-const ItemList = () => {
+import { memo } from 'react';
+
+const ItemList = memo(() => {
   const items = useLostAndFoundStore((state) => state.items);
 
   if (items.length === 0) {
@@ -25,6 +27,6 @@ const ItemList = () => {
       ))}
     </Grid>
   );
-};
+});
 
 export default ItemList;

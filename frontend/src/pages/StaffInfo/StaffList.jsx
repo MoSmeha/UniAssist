@@ -1,14 +1,16 @@
-import { useState } from "react";
-import TopBar from "../ChatApp/TopBarChat";
+import { memo } from 'react';
+import TopBar from "./TopSearchBar";
 import AllStaff from "./AllStaff";
+import useStaffStore from '../../zustand/useStaffStore';
+
 function StaffList() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const { setSearchTerm } = useStaffStore();
 
   return (
     <>
       <TopBar setSearchTerm={setSearchTerm} />
-      <AllStaff searchTerm={searchTerm} />
+      <AllStaff />
     </>
   );
 }
-export default StaffList;
+export default memo(StaffList);
