@@ -26,7 +26,7 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import CategoryIcon from "@mui/icons-material/Category";
 import PersonIcon from "@mui/icons-material/Person";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import ChatIcon from "@mui/icons-material/Chat"; // Import the Chat icon
+import ReportIcon from "@mui/icons-material/Report";
 import toast from "react-hot-toast";
 import { useLostAndFoundStore } from "../../zustand/useLostFoundstore";
 import { useAuthStore } from "../../zustand/AuthStore";
@@ -247,7 +247,7 @@ const ItemCard = React.memo(function ItemCard({ item }) {
                   variant="outlined"
                   color="primary"
                   onClick={handleChat}
-                  startIcon={<ChatIcon />}
+                  startIcon={<ReportIcon />}
                   size="small"
                   sx={{ textTransform: "none", borderRadius: 1 }}
                 >

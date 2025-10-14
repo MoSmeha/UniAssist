@@ -43,7 +43,7 @@ export const SocketManager = () => {
           console.error("Failed to fetch notifications:", err);
         });
 
-      const newSocket = io("http://localhost:5000", {
+      const newSocket = io("https://uniassist-d16j.onrender.com/", {
         query: {
           userId: authUser._id,
         },
