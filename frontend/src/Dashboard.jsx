@@ -39,7 +39,7 @@ import useLogout from "./hooks/useLogout";
 import useConversationStore from "./zustand/useConversationStore";
 
 import ChatApp from "./pages/ChatApp/ChatApp";
-import ScheduleTable from "./pages/Schedule/ScheduleComponent";
+import ScheduleTable from "./pages/Schedule/StudentSchedule";
 import TODO from "./pages/TodoList/TodoList";
 import StaffList from "./pages/StaffInfo/StaffList";
 import Announcements from "./pages/Announcement/Announcements";

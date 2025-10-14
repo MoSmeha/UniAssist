@@ -18,7 +18,7 @@ import PaginationControls from "./PaginationControls";
 import CreateItemModal from "./CreateItemModal";
 
 const LostAndFoundPage = () => {
-  const { fetchItems, loading, error } = useLostAndFoundStore();
+  const { fetchItems, loading, error, items } = useLostAndFoundStore();
   const [modalOpen, setModalOpen] = useState(false);
 
   // Get the current Material-UI theme
@@ -27,8 +27,10 @@ const LostAndFoundPage = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+    if (items.length === 0) {
+      fetchItems();
+    }
+  }, [fetchItems, items.length]);
 
   return (
     <>

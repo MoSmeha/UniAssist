@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import {
   Container,
   Typography,
@@ -21,6 +21,7 @@ import SchoolIcon from "@mui/icons-material/School";
 import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
 import VideocamIcon from "@mui/icons-material/Videocam";
 import { useAuthStore } from "../../zustand/AuthStore";
+import useScheduleStore from "../../zustand/useScheduleStore";
 
 // DayHeader component renders the day heading
 const DayHeader = ({ day, theme }) => (
@@ -215,9 +216,7 @@ const StudentSchedule = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const authUser = useAuthStore((state) => state.authUser);
   const userId = authUser?._id;
-  const [schedule, setSchedule] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { schedule, loading, error, fetchSchedule } = useScheduleStore();
 
   const daysOrder = [
     "Monday",
@@ -229,32 +228,10 @@ const StudentSchedule = () => {
   ];
 
   useEffect(() => {
-    const fetchSchedule = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/sch/${userId}/schedule`);
-        if (!response.ok)
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        const data = await response.json();
-        const sortedSchedule = data.sort((a, b) => {
-          const dayDiff = daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day);
-          if (dayDiff !== 0) return dayDiff;
-          const aTime = new Date(`1970/01/01 ${a.startTime}`);
-          const bTime = new Date(`1970/01/01 ${b.startTime}`);
-          return aTime - bTime;
-        });
-        setSchedule(sortedSchedule);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching schedule:", err);
-        setError("Failed to load schedule. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (userId) fetchSchedule();
-  }, [userId]);
+    if (userId && schedule.length === 0) {
+      fetchSchedule(userId);
+    }
+  }, [userId, schedule.length, fetchSchedule]);
 
   const scheduleByDay = daysOrder
     .map((day) => ({

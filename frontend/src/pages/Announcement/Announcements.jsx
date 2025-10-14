@@ -11,12 +11,6 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
-  Avatar,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Divider,
-  Chip,
   TextField,
   Select,
   MenuItem,
@@ -25,92 +19,37 @@ import {
   InputAdornment,
   Hidden,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
 import AddIcon from "@mui/icons-material/Add";
 import CreateAnnouncement from "./CreateAnnouncement";
 import { useAuthStore } from "../../zustand/AuthStore";
-import toast from "react-hot-toast";
+import useAnnouncementsStore from "../../zustand/useAnnouncementsStore";
+import AnnouncementList from "./AnnouncementList";
 
 const Announcements = () => {
   const { authUser } = useAuthStore();
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { announcements, loading, fetchAnnouncements } = useAnnouncementsStore();
   const [openDialog, setOpenDialog] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [openFilterDialog, setOpenFilterDialog] = useState(false);
 
   useEffect(() => {
-    fetchAnnouncements();
-  }, [authUser]);
-
-  const fetchAnnouncements = async () => {
-    try {
-      setLoading(true);
-      let endpoint;
-      if (authUser.role === "student") {
-        endpoint = "/api/announcements/student";
-      } else if (authUser.role === "teacher") {
-        endpoint = "/api/announcements/teacher";
-      } else if (authUser.role === "admin") {
-        endpoint = "/api/announcements/admin";
-      } else {
-        throw new Error("Unknown role");
-      }
-
-      const response = await fetch(endpoint, {
-        credentials: "include",
-        headers: {
-          Authorization: `Bearer ${authUser.token}`,
-        },
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setAnnouncements(data.announcements || []);
-      } else {
-        toast.error(data.message || "Failed to fetch announcements");
-      }
-    } catch (error) {
-      console.error("Error fetching announcements:", error);
-      toast.error("Failed to load announcements");
-    } finally {
-      setLoading(false);
+    if (announcements.length === 0) {
+      fetchAnnouncements(authUser);
     }
-  };
+  }, [authUser, fetchAnnouncements, announcements.length]);
 
   const handleDialogOpen = () => setOpenDialog(true);
   const handleDialogClose = () => {
     setOpenDialog(false);
-    fetchAnnouncements();
+    fetchAnnouncements(authUser);
   };
 
   const handleFilterDialogOpen = () => setOpenFilterDialog(true);
   const handleFilterDialogClose = () => setOpenFilterDialog(false);
-
-  const formatDate = (isoString) => {
-    const date = new Date(isoString);
-    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-  };
-
-  const getCategoryChipColor = (category) => {
-    switch (category) {
-      case "Exam":
-        return "error";
-      case "Makeup Session":
-        return "warning";
-      case "Event":
-        return "info";
-      case "Other":
-        return "default";
-      default:
-        return "default";
-    }
-  };
 
   const filteredAnnouncements = announcements.filter((announcement) => {
     const matchesSearch =
@@ -135,7 +74,7 @@ const Announcements = () => {
 
   return (
     <>
-       <AppBar position="static" color="primary" elevation={3} sx={{ mb: 3, py: 0.5 }}> {/* Changed p to py for vertical padding */}
+       <AppBar position="static" color="primary" elevation={3} sx={{ mb: 3, py: 0.5 }}>
         <Toolbar
           sx={{
             display: 'flex',
@@ -144,11 +83,10 @@ const Announcements = () => {
             alignItems: 'center',
             gap: { xs: 1, sm: 2 },
             width: '100%',
-            minHeight: { xs: '44px', sm: '50px' } // Slightly reduced minHeight
+            minHeight: { xs: '44px', sm: '50px' } 
           }}
         >
 
-          {/* Always display search and filter for all roles */}
           <Box
             sx={{
               display: "flex",
@@ -264,79 +202,8 @@ const Announcements = () => {
           <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
             <CircularProgress />
           </Box>
-        ) : filteredAnnouncements.length === 0 ? (
-          <Typography component="span" variant="body1" color="textSecondary" sx={{ my: 4, textAlign: "center" }}>
-            {authUser.role === "student"
-              ? "No announcements available for you"
-              : "No announcements match your criteria"}
-          </Typography>
         ) : (
-          filteredAnnouncements.map((announcement) => (
-            <Accordion key={announcement._id} sx={{ mb: 1 }}>
-              <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Box display="flex" alignItems="center" width="100%">
-                  <Avatar src={announcement.sender.profilePic} alt={announcement.sender.firstName} sx={{ mr: 2, width: { xs: 30, sm: 40 }, height: { xs: 30, sm: 40 } }} /> {/* Responsive Avatar size */}
-                  <Box flexGrow={1} textAlign="left">
-                    <Typography
-                      variant="subtitle1"
-                      component="div"
-                      sx={{ fontSize: { xs: "0.8rem", sm: "0.9rem", md: "1rem" } }}
-                    >
-                      {announcement.sender.firstName} {announcement.sender.lastName}
-                      <Typography
-                        component="span"
-                        variant="subtitle2"
-                        color="textSecondary"
-                        sx={{ ml: 1, fontSize: { xs: "0.5rem", sm: "0.85rem", md: "0.875rem" } }}
-                      >
-                        to {announcement.announcementType === "subject" ? announcement.targetSubject : announcement.targetMajor}
-                      </Typography>
-                    </Typography>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Typography
-                        variant="body2"
-                        color="textPrimary"
-                        fontWeight="bold"
-                        sx={{ fontSize: { xs: "0.75rem", sm: "0.85rem", md: "1rem" } }}
-                      >
-                        {announcement.title}
-                      </Typography>
-                      {announcement.category && (
-                        <Chip label={announcement.category} size="small" color={getCategoryChipColor(announcement.category)} />
-                      )}
-                    </Box>
-                  </Box>
-                  <Typography
-                    variant="body2"
-                    color="textSecondary"
-                    sx={{ ml: 2, flexShrink: 0, fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.9rem" } }}
-                  >
-                    {formatDate(announcement.createdAt)}
-                  </Typography>
-                </Box>
-              </AccordionSummary>
-              <AccordionDetails>
-                <Typography
-                  textAlign="left"
-                  variant="body2"
-                  paragraph
-                  sx={{ fontSize: { xs: "0.85rem", sm: "0.95rem", md: "1rem" } }}
-                >
-                  {announcement.content}
-                </Typography>
-                <Divider />
-                <Box textAlign="left" mt={2}>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem", md: "0.75rem" } }}
-                  >
-                    {announcement.sender.title} - {announcement.sender.Department}
-                  </Typography>
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          ))
+          <AnnouncementList announcements={filteredAnnouncements} authUser={authUser} />
         )}
       </Container>
 
