@@ -35,6 +35,7 @@ import {
     LocalFireDepartment as CaloriesIcon
 } from '@mui/icons-material';
 import { useAuthStore } from '../../zustand/AuthStore';
+import useCafeteriaStore from '../../zustand/useCafeteriaStore';
 import toast, { Toaster } from 'react-hot-toast';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
@@ -50,11 +51,18 @@ export default function CafeteriaMenu() {
     const isAdmin = authUser?.role === 'admin';
     const theme = useTheme(); // Use the theme hook to access palette
 
+    const {
+        menus,
+        loading,
+        error,
+        fetchMenu,
+        addMenuItem,
+        updateMenuItem,
+        deleteMenuItem,
+    } = useCafeteriaStore();
+
     // State
     const [selectedDay, setSelectedDay] = useState('Monday');
-    const [menu, setMenu] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
 
     // Dialog states
     const [openDialog, setOpenDialog] = useState(false);
@@ -87,34 +95,9 @@ export default function CafeteriaMenu() {
     // Fetch menu data
     useEffect(() => {
         fetchMenu(selectedDay);
-    }, [selectedDay]);
+    }, [selectedDay, fetchMenu]);
 
-    const fetchMenu = async (day) => {
-        if (!day) return;
-        setLoading(true);
-        setError('');
-
-        try {
-            const response = await fetch(`/api/menu/${day}`);
-            if (!response.ok) {
-                if (response.status === 404) {
-                    setMenu(null);
-                } else {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || `Failed to fetch menu for ${day}`);
-                }
-            } else {
-                const data = await response.json();
-                setMenu(data);
-            }
-        } catch (err) {
-            setError(err.message);
-            toast.error(`Failed to load menu: ${err.message}`);
-            setMenu(null);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const menu = menus[selectedDay];
 
     // Dialog handlers
     const openItemDialog = (mode, category, item = null) => {
@@ -179,29 +162,22 @@ export default function CafeteriaMenu() {
         }
 
         setIsSaving(true);
-        setError('');
-
-        const url = dialogMode === 'add'
-            ? `/api/menu/${selectedDay}/${currentCategory}`
-            : `/api/menu/${selectedDay}/${currentCategory}/${currentItem._id}`;
-
-        const method = dialogMode === 'add' ? 'POST' : 'PUT';
 
         try {
-            const response = await fetch(url, {
-                method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
+            if (dialogMode === 'add') {
+                await addMenuItem(selectedDay, currentCategory, {
                     name: currentItem.name,
                     protein: Number(currentItem.protein),
                     calories: Number(currentItem.calories),
                     image: currentItem.image
-                })
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to save item');
+                });
+            } else {
+                await updateMenuItem(selectedDay, currentCategory, currentItem._id, {
+                    name: currentItem.name,
+                    protein: Number(currentItem.protein),
+                    calories: Number(currentItem.calories),
+                    image: currentItem.image
+                });
             }
 
             await fetchMenu(selectedDay);
@@ -209,7 +185,6 @@ export default function CafeteriaMenu() {
             toast.success(`Item ${dialogMode === 'add' ? 'added' : 'updated'} successfully!`);
         } catch (err) {
             toast.error(`Error saving item: ${err.message}`);
-            setError(err.message);
         } finally {
             setIsSaving(false);
         }
@@ -231,24 +206,14 @@ export default function CafeteriaMenu() {
         const { category, item } = deleteDialog;
 
         setIsDeleting(true);
-        setError('');
 
         try {
-            const response = await fetch(`/api/menu/${selectedDay}/${category}/${item._id}`, {
-                method: 'DELETE'
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to delete item');
-            }
-
+            await deleteMenuItem(selectedDay, category, item._id);
             await fetchMenu(selectedDay);
             closeDeleteDialog();
             toast.success(`"${item.name}" deleted successfully!`);
         } catch (err) {
             toast.error(`Error deleting item: ${err.message}`);
-            setError(err.message);
         } finally {
             setIsDeleting(false);
         }
@@ -475,6 +440,8 @@ export default function CafeteriaMenu() {
                 </Box>
             )}
 
+            {error && <Alert severity="error">{error}</Alert>}
+
             {/* Menu content */}
             {!loading && menu && (
                 <Box>
@@ -503,15 +470,7 @@ export default function CafeteriaMenu() {
                             sx={{ mt: 2 }}
                             onClick={async () => {
                                 try {
-                                    const response = await fetch('/api/menu', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ day: selectedDay })
-                                    });
-                                    if (!response.ok) {
-                                        const errorData = await response.json();
-                                        throw new Error(errorData.message || 'Failed to create empty menu for the day');
-                                    }
+                                    await createMenuForDay(selectedDay);
                                     toast.success(`Empty menu created for ${selectedDay}!`);
                                     await fetchMenu(selectedDay);
                                 } catch (err) {

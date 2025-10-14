@@ -39,6 +39,7 @@ import {
   Upload
 } from '@mui/icons-material';
 import { useAuthStore } from '../zustand/AuthStore';
+import useProfileStore from '../zustand/useProfileStore';
 
 const ProfilePage = () => {
   const theme = useTheme();
@@ -46,10 +47,14 @@ const ProfilePage = () => {
   const isSmallMobile = useMediaQuery(theme.breakpoints.down('sm'));
   
   const authUser = useAuthStore((state) => state.authUser);
-  const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const {
+    profile: userData,
+    loading,
+    error,
+    fetchProfile,
+  } = useProfileStore();
+
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [scheduleOpen, setScheduleOpen] = useState(false);
 
@@ -63,29 +68,10 @@ const ProfilePage = () => {
   };
 
   useEffect(() => {
-    if (authUser) {
-      fetchUserProfile();
+    if (authUser && (!userData || userData._id !== authUser._id)) {
+      fetchProfile(authUser._id);
     }
-  }, [authUser]);
-
-  const fetchUserProfile = async () => {
-    try {
-      const response = await fetch(`/api/users/${authUser._id}`, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile');
-      }
-      
-      const data = await response.json();
-      setUserData(data);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [authUser, userData]);
 
   const handleProfilePicUpload = async (event) => {
     const file = event.target.files[0];
@@ -93,18 +79,18 @@ const ProfilePage = () => {
 
     // Validate file type
     if (!file.type.startsWith('image/')) {
-      setError('Please select an image file');
+      setSuccess('');
       return;
     }
 
     // Validate file size (5MB)
     if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be less than 5MB');
+      setSuccess('');
       return;
     }
 
     setUploading(true);
-    setError('');
+    setSuccess('');
 
     try {
       const formData = new FormData();
@@ -121,10 +107,10 @@ const ProfilePage = () => {
       }
 
       const data = await response.json();
-      setUserData(prev => ({ ...prev, profilePic: data.profilePic }));
+      fetchProfile(authUser._id);
       setSuccess('Profile picture updated successfully!');
     } catch (err) {
-      setError(err.message);
+      setSuccess('');
     } finally {
       setUploading(false);
     }
@@ -168,7 +154,7 @@ const ProfilePage = () => {
   if (!userData) {
     return (
       <Container maxWidth="md">
-        <Alert severity="error">Failed to load profile data</Alert>
+        <Alert severity="error">{error || 'Failed to load profile data'}</Alert>
       </Container>
     );
   }
@@ -176,7 +162,7 @@ const ProfilePage = () => {
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 }, px: { xs: 1, sm: 2 } }}>
       {error && (
-        <Alert severity="error" sx={{ mb: 2, fontSize: { xs: '0.8rem', sm: '0.875rem' } }} onClose={() => setError('')}>
+        <Alert severity="error" sx={{ mb: 2, fontSize: { xs: '0.8rem', sm: '0.875rem' } }} onClose={() => setSuccess('')}>
           {error}
         </Alert>
       )}

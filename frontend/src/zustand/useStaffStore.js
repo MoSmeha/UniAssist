@@ -16,7 +16,9 @@ const useStaffStore = create((set) => ({
       if (data.error) {
         throw new Error(data.error);
       }
-      set({ staff: data, loading: false });
+      const staffRoles = ["teacher", "admin"];
+      const staffOnly = data.filter((user) => staffRoles.includes(user.role));
+      set({ staff: staffOnly, loading: false });
     } catch (error) {
       set({ error: error.message, loading: false });
     }

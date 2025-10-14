@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 // Assume your API is running on this base URL
 const API_BASE_URL = "api/lost-and-found"; // Adjust if needed
@@ -33,129 +34,139 @@ const apiFetch = async (url, options = {}) => {
   return response.json();
 };
 
-export const useLostAndFoundStore = create((set, get) => ({
-  items: [],
-  pagination: {
-    page: 1,
-    limit: 10,
-    totalPages: 1,
-    totalCount: 0,
-  },
-  filters: {
-    type: "", // 'lost', 'found', or '' for all
-    category: "",
-    resolved: "", // 'true', 'false', or '' for all
-  },
-  loading: false,
-  error: null,
+export const useLostAndFoundStore = create(
+  persist(
+    (set, get) => ({
+      items: [],
+      pagination: {
+        page: 1,
+        limit: 10,
+        totalPages: 1,
+        totalCount: 0,
+      },
+      filters: {
+        type: "", // 'lost', 'found', or '' for all
+        category: "",
+        resolved: "", // 'true', 'false', or '' for all
+      },
+      loading: false,
+      error: null,
 
-  // Set filters and fetch items
-  setFilters: (newFilters) => {
-    set((state) => ({
-      filters: { ...state.filters, ...newFilters },
-      pagination: { ...state.pagination, page: 1 }, // Reset to first page on filter change
-    }));
-    get().fetchItems();
-  },
+      // Set filters and fetch items
+      setFilters: (newFilters) => {
+        set((state) => ({
+          filters: { ...state.filters, ...newFilters },
+          pagination: { ...state.pagination, page: 1 }, // Reset to first page on filter change
+        }));
+        get().fetchItems();
+      },
 
-  // Set page and fetch items
-  setPage: (page) => {
-    set((state) => ({
-      pagination: { ...state.pagination, page },
-    }));
-    get().fetchItems();
-  },
+      // Set page and fetch items
+      setPage: (page) => {
+        set((state) => ({
+          pagination: { ...state.pagination, page },
+        }));
+        get().fetchItems();
+      },
 
-  // Fetch all items based on current filters and pagination
-  fetchItems: async () => {
-    set({ loading: true, error: null });
-    try {
-      const { filters, pagination } = get();
-      const params = new URLSearchParams({
-        page: pagination.page,
-        limit: pagination.limit,
-      });
+      // Fetch all items based on current filters and pagination
+      fetchItems: async () => {
+        set({ loading: true, error: null });
+        try {
+          const { filters, pagination } = get();
+          const params = new URLSearchParams({
+            page: pagination.page,
+            limit: pagination.limit,
+          });
 
-      if (filters.type) params.append("type", filters.type);
-      if (filters.category) params.append("category", filters.category);
-      if (filters.resolved) params.append("resolved", filters.resolved);
+          if (filters.type) params.append("type", filters.type);
+          if (filters.category) params.append("category", filters.category);
+          if (filters.resolved) params.append("resolved", filters.resolved);
 
-      const data = await apiFetch(`${API_BASE_URL}?${params.toString()}`);
-      set({
-        items: data.items,
-        pagination: data.pagination,
-        loading: false,
-      });
-    } catch (error) {
-      set({ error: error.message, loading: false });
-    }
-  },
-
-  // Create a new item
-  createItem: async (itemData) => {
-    set({ loading: true, error: null });
-    try {
-      // We use FormData because of the image file
-      const formData = new FormData();
-      Object.keys(itemData).forEach((key) => {
-        if (itemData[key] != null) {
-          formData.append(key, itemData[key]);
+          const data = await apiFetch(`${API_BASE_URL}?${params.toString()}`);
+          set({
+            items: data.items,
+            pagination: data.pagination,
+            loading: false,
+          });
+        } catch (error) {
+          set({ error: error.message, loading: false });
         }
-      });
+      },
 
-      const newItem = await apiFetch(API_BASE_URL, {
-        method: "POST",
-        body: formData,
-      });
+      // Create a new item
+      createItem: async (itemData) => {
+        set({ loading: true, error: null });
+        try {
+          // We use FormData because of the image file
+          const formData = new FormData();
+          Object.keys(itemData).forEach((key) => {
+            if (itemData[key] != null) {
+              formData.append(key, itemData[key]);
+            }
+          });
 
-      set((state) => ({
-        items: [newItem, ...state.items],
-        loading: false,
-      }));
-      get().fetchItems(); // Refresh list to ensure consistency
-      return newItem;
-    } catch (error) {
-      set({ error: error.message, loading: false });
-      throw error;
+          const newItem = await apiFetch(API_BASE_URL, {
+            method: "POST",
+            body: formData,
+          });
+
+          set((state) => ({
+            items: [newItem, ...state.items],
+            loading: false,
+          }));
+          get().fetchItems(); // Refresh list to ensure consistency
+          return newItem;
+        } catch (error) {
+          set({ error: error.message, loading: false });
+          throw error;
+        }
+      },
+
+      updateResolvedStatus: async (itemId, resolved) => {
+        set({ loading: true, error: null });
+        try {
+          const updatedItem = await apiFetch(
+            `${API_BASE_URL}/${itemId}/resolve`,
+            {
+              method: "PATCH",
+              body: JSON.stringify({ resolved }),
+            }
+          );
+
+          // Update the item in the local state
+          set((state) => ({
+            items: state.items.map((item) =>
+              item._id === itemId ? updatedItem : item
+            ),
+            loading: false,
+          }));
+        } catch (error) {
+          set({ error: error.message, loading: false });
+        }
+      },
+
+      // Delete an item
+      deleteItem: async (itemId) => {
+        set({ loading: true, error: null });
+        try {
+          await apiFetch(`${API_BASE_URL}/${itemId}`, {
+            method: "DELETE",
+          });
+
+          // Remove the item from the local state
+          set((state) => ({
+            items: state.items.filter((item) => item._id !== itemId),
+            loading: false,
+          }));
+          get().fetchItems(); // Refresh list to ensure total count is correct
+        } catch (error) {
+          set({ error: error.message, loading: false });
+        }
+      },
+    }),
+    {
+      name: "lost-and-found-storage", // unique name
     }
-  },
-
-  updateResolvedStatus: async (itemId, resolved) => {
-    set({ loading: true, error: null });
-    try {
-      const updatedItem = await apiFetch(`${API_BASE_URL}/${itemId}/resolve`, {
-        method: "PATCH",
-        body: JSON.stringify({ resolved }),
-      });
-
-      // Update the item in the local state
-      set((state) => ({
-        items: state.items.map((item) =>
-          item._id === itemId ? updatedItem : item
-        ),
-        loading: false,
-      }));
-    } catch (error) {
-      set({ error: error.message, loading: false });
-    }
-  },
-
-  // Delete an item
-  deleteItem: async (itemId) => {
-    set({ loading: true, error: null });
-    try {
-      await apiFetch(`${API_BASE_URL}/${itemId}`, {
-        method: "DELETE",
-      });
-
-      // Remove the item from the local state
-      set((state) => ({
-        items: state.items.filter((item) => item._id !== itemId),
-        loading: false,
-      }));
-      get().fetchItems(); // Refresh list to ensure total count is correct
-    } catch (error) {
-      set({ error: error.message, loading: false });
-    }
-  },
-}));
+  )
+);
