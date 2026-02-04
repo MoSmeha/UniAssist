@@ -2,7 +2,7 @@ import Conversation from "../models/conversation.model.js";
 import Message from "../models/message.model.js";
 import { User } from "../models/user.model.js";
 import { getReceiverSocketId, getIO } from "../socket/socket.js";
-import notificationService from "../utils/NotificationService.js";
+import * as notificationService from "./notification.service.js";
 
 export const sendMessage = async (messageText, receiverId, senderId) => {
   // 1. Find or create the conversation

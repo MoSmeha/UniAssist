@@ -1,5 +1,5 @@
 import LostAndFoundItem from "../models/lostitem.model.js";
-import notificationService from "../utils/NotificationService.js";
+import * as notificationService from "./notification.service.js";
 
 export const createLostAndFoundItem = async (itemData, userId, imagePath) => {
   const { title, description, category, location, phoneNumber, type } = itemData;

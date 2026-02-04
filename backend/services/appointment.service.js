@@ -1,5 +1,5 @@
 import Appointment from '../models/appointment.model.js';
-import notificationService from "../utils/NotificationService.js";
+import * as notificationService from "./notification.service.js";
 
 export const createAppointment = async (appointmentData) => {
   const { student, teacher, startTime, intervalMinutes, appointmentReason } = appointmentData;

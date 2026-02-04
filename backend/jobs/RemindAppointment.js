@@ -1,5 +1,5 @@
 import  Appointment  from "../models/appointment.model.js";
-import notificationService from "../utils/NotificationService.js"
+import * as notificationService from "../services/notification.service.js";
 
 const SYSTEM_SENDER_ID = process.env.SYSTEM_SENDER_ID;
 

@@ -1,6 +1,6 @@
 import { User, Student } from "../models/user.model.js";
 import { BADGES } from "../models/Constants.js";
-import notificationService from "../utils/NotificationService.js";
+import * as notificationService from "../services/notification.service.js";
 
 // POST /api/pomodoro/session
 export async function recordSession(req, res) {

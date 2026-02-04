@@ -1,6 +1,6 @@
 import Announcement from "../models/announcement.model.js";
 import { Student } from "../models/user.model.js";
-import notificationService from "../utils/NotificationService.js";
+import * as notificationService from "./notification.service.js";
 
 export const createAnnouncement = async (announcementData, senderId) => {
   const {

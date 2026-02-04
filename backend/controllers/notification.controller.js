@@ -1,13 +1,10 @@
-// controllers/notification.controller.js
-import Notification from "../models/notification.model.js";
+import * as notificationService from "../services/notification.service.js";
 
 // GET /api/notifications
 export const listNotifications = async (req, res) => {
   try {
-    const notes = await Notification.find({ user: req.user._id })
-      .sort("-createdAt")
-      .populate("sender", "firstName lastName profilePic");
-    res.json(notes);
+    const notifications = await notificationService.listNotifications(req.user._id);
+    res.json(notifications);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to load notifications" });
@@ -17,10 +14,7 @@ export const listNotifications = async (req, res) => {
 // PATCH /api/notifications/markRead
 export const markAllRead = async (req, res) => {
   try {
-    await Notification.updateMany(
-      { user: req.user._id, read: false },
-      { read: true }
-    );
+    await notificationService.markAllRead(req.user._id);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
@@ -31,15 +25,11 @@ export const markAllRead = async (req, res) => {
 // PATCH /api/notifications/:id/read
 export const markOneRead = async (req, res) => {
   try {
-    const note = await Notification.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
-      { read: true },
-      { new: true }
-    );
-    if (!note) return res.status(404).json({ error: "Not found" });
-    res.json(note);
+    const notification = await notificationService.markOneRead(req.params.id, req.user._id);
+    res.json(notification);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: "Failed to mark read" });
+    const statusCode = err.message === "Notification not found" ? 404 : 500;
+    res.status(statusCode).json({ error: err.message || "Failed to mark read" });
   }
 };
