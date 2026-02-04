@@ -1,9 +1,8 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
-import { Document } from "@langchain/core/documents";
 import { DynamicStructuredTool } from "@langchain/core/tools";
-import { StateGraph, START, END } from "@langchain/langgraph";
+import { StateGraph, START, END, Annotation } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
-import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import { SystemMessage, HumanMessage, ToolMessage } from "@langchain/core/messages";
 import { z } from "zod";
 
 import KnowledgeBase from "../models/KnowledgeBase.model.js";
@@ -11,22 +10,9 @@ import * as todoService from "./todo.service.js";
 import * as appointmentService from "./appointment.service.js";
 import * as cafeteriaMenuService from "./cafeteriaMenu.service.js";
 
-// State definition for LangGraph
-const AgentState = {
-  messages: {
-    value: (prev, next) => [...prev, ...next],
-    default: () => [],
-  },
-  context: {
-    value: (prev, next) => next ?? prev,
-    default: () => "",
-  },
-};
-
 // Singletons
 let embeddingsModel = null;
 let knowledgeEmbeddings = []; // { content, embedding, metadata }
-let graph = null;
 
 /**
  * Cosine similarity between two vectors
@@ -97,8 +83,9 @@ const similaritySearch = async (query, k = 3) => {
 
 /**
  * Create LangChain tools that wrap existing services
+ * @param {string} userId - The user ID to use for authenticated operations
  */
-const createTools = () => {
+const createTools = (userId) => {
   const searchCampusInfo = new DynamicStructuredTool({
     name: "search_campus_info",
     description:
@@ -118,7 +105,7 @@ const createTools = () => {
   const createTodo = new DynamicStructuredTool({
     name: "create_todo",
     description:
-      "Create a new todo/task/reminder for the user. Use this when the user wants to be reminded of something or add a task.",
+      "Create a new todo/task/reminder for the user. Use this when the user wants to be reminded of something or add a task. The user ID is already known - do NOT ask for it.",
     schema: z.object({
       title: z.string().describe("Title of the todo"),
       description: z.string().optional().describe("Optional description"),
@@ -127,17 +114,10 @@ const createTools = () => {
         .enum(["Top", "Moderate", "Low"])
         .describe("Priority level of the todo"),
     }),
-    func: async ({ title, description, date, priority }, runManager) => {
-      const config = runManager?.config;
-      const userId = config?.configurable?.userId;
-
-      if (!userId) {
-        return "Error: User ID not available. Cannot create todo.";
-      }
-
+    func: async ({ title, description, date, priority }) => {
       try {
         const todo = await todoService.createTodo(
-          { title, description, date, priority },
+          { title, description: description || "", date, priority },
           userId
         );
         return `Successfully created todo: "${todo.title}" for ${date} with ${priority} priority.`;
@@ -150,24 +130,14 @@ const createTools = () => {
   const createAppointment = new DynamicStructuredTool({
     name: "create_appointment",
     description:
-      "Book an appointment with a teacher/professor. Use when user wants to schedule a meeting.",
+      "Book an appointment with a teacher/professor. Use when user wants to schedule a meeting. The user ID is already known - do NOT ask for it.",
     schema: z.object({
       teacherId: z.string().describe("The ID of the teacher to book with"),
       startTime: z.string().describe("Start time in ISO format"),
       intervalMinutes: z.number().default(30).describe("Duration in minutes"),
       appointmentReason: z.string().describe("Reason for the appointment"),
     }),
-    func: async (
-      { teacherId, startTime, intervalMinutes, appointmentReason },
-      runManager
-    ) => {
-      const config = runManager?.config;
-      const userId = config?.configurable?.userId;
-
-      if (!userId) {
-        return "Error: User ID not available. Cannot create appointment.";
-      }
-
+    func: async ({ teacherId, startTime, intervalMinutes, appointmentReason }) => {
       try {
         const appt = await appointmentService.createAppointment({
           student: userId,
@@ -206,12 +176,11 @@ const createTools = () => {
 };
 
 /**
- * Build the LangGraph workflow
+ * Build the LangGraph workflow for a specific user
+ * @param {string} userId - The user ID
  */
-const buildGraph = async () => {
-  if (graph) return graph;
-
-  const tools = createTools();
+const buildGraph = (userId) => {
+  const tools = createTools(userId);
   const toolNode = new ToolNode(tools);
 
   const model = new ChatOpenAI({
@@ -226,8 +195,17 @@ const buildGraph = async () => {
 3. Help book appointments with teachers using the create_appointment tool.
 4. Provide cafeteria menu information using the get_cafeteria_menu tool.
 
+IMPORTANT: The user is already authenticated. You have their user ID. NEVER ask users for their user ID.
 Be helpful, concise, and friendly. When you don't have specific information, use the appropriate tool to find it.
 Today's date is ${new Date().toISOString().split("T")[0]}.`;
+
+  // Define state using Annotation
+  const AgentState = Annotation.Root({
+    messages: Annotation({
+      reducer: (prev, next) => [...prev, ...next],
+      default: () => [],
+    }),
+  });
 
   // Agent node - calls the LLM
   const agentNode = async (state) => {
@@ -248,7 +226,7 @@ Today's date is ${new Date().toISOString().split("T")[0]}.`;
   };
 
   // Build the graph
-  const workflow = new StateGraph({ channels: AgentState })
+  const workflow = new StateGraph(AgentState)
     .addNode("agent", agentNode)
     .addNode("tools", toolNode)
     .addEdge(START, "agent")
@@ -258,9 +236,7 @@ Today's date is ${new Date().toISOString().split("T")[0]}.`;
     })
     .addEdge("tools", "agent");
 
-  graph = workflow.compile();
-  console.log("LangGraph agent compiled successfully");
-  return graph;
+  return workflow.compile();
 };
 
 /**
@@ -270,18 +246,13 @@ export const chat = async (message, userId) => {
   // Initialize embeddings on first call
   await initEmbeddings();
 
-  // Build graph on first call
-  const agentGraph = await buildGraph();
+  // Build graph for this specific user (userId is captured in closure)
+  const agentGraph = buildGraph(userId);
 
   // Run the graph
-  const result = await agentGraph.invoke(
-    {
-      messages: [new HumanMessage(message)],
-    },
-    {
-      configurable: { userId },
-    }
-  );
+  const result = await agentGraph.invoke({
+    messages: [new HumanMessage(message)],
+  });
 
   // Extract final response
   const lastMessage = result.messages[result.messages.length - 1];
@@ -294,7 +265,6 @@ export const chat = async (message, userId) => {
 export const initAgent = async () => {
   try {
     await initEmbeddings();
-    await buildGraph();
     console.log("UniAssist Agent initialized successfully");
   } catch (error) {
     console.error("Failed to initialize agent:", error.message);
