@@ -1,18 +1,11 @@
-import { User } from "../models/user.model.js"; // Note the .js extension
+import * as scheduleService from "../services/schedule.service.js";
 
 export const getUserSchedule = async (req, res) => {
   try {
-    const userId = req.params.id;
-
-    // Find the user by ID and select only the schedule field
-    const user = await User.findById(userId).select("schedule");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json(user.schedule);
+    const schedule = await scheduleService.getUserSchedule(req.params.id);
+    res.status(200).json(schedule);
   } catch (error) {
-    res.status(500).json({ message: "Server error", error: error.message });
+    const statusCode = error.message === "User not found" ? 404 : 500;
+    res.status(statusCode).json({ message: error.message || "Server error" });
   }
 };
