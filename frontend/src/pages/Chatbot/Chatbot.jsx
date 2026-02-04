@@ -40,12 +40,13 @@ const Chatbot = () => {
     setQuestion("");
 
     try {
-      const response = await fetch("/api/chatbot/ask", {
+      const response = await fetch("/api/agent/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ question }),
+        credentials: "include",
+        body: JSON.stringify({ message: question }),
       });
 
       if (!response.ok) {
@@ -55,7 +56,7 @@ const Chatbot = () => {
       const data = await response.json();
       setChatHistory((prev) => [
         ...prev,
-        { sender: "bot", message: data.answer },
+        { sender: "bot", message: data.response },
       ]);
     } catch (error) {
       console.error("Error:", error);
@@ -138,16 +139,15 @@ const Chatbot = () => {
                 color="text.secondary"
                 sx={{ maxWidth: 350 }}
               >
-                Ask me anything about Building A's layout, facilities, room
-                locations, and more.
+                I can answer campus questions, create reminders, book appointments,
+                and check the cafeteria menu!
               </Typography>
               <Typography
                 variant={isMobile ? "caption" : "caption"}
                 color="text.disabled"
                 sx={{ fontStyle: "italic", mt: 2 }}
               >
-                💡 Try: "What's on the second floor?" or "Where is the
-                cafeteria?"
+                💡 Try: "Where is the library?" or "Remind me to study tomorrow"
               </Typography>
             </Stack>
           ) : (

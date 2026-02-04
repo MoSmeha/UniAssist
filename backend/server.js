@@ -19,6 +19,8 @@ import AppointmentRoutes from "./routes/appointment.routes.js"
 import notificationRoutes from "./routes/notification.routes.js"
 import CafeteriaRoutes from "./routes/cafeteria.routes.js"
 import ContactUsRoutes from "./routes/contactUs.routes.js";
+import agentRoutes from "./routes/agent.routes.js";
+import { initAgent } from "./services/agent.service.js";
 
 import { app, server } from "./socket/socket.js";
 
@@ -60,6 +62,7 @@ app.use("/api/appointments", AppointmentRoutes);
 app.use("/api/notifications" , notificationRoutes)
 app.use("/api/menu" , CafeteriaRoutes)
 app.use("/api/contact" , ContactUsRoutes)
+app.use("/api/agent", agentRoutes);
 
 
 app.use((err, req, res, next) => {
@@ -86,7 +89,8 @@ app.get("*", (req, res) => {
 });
 
 // Start the server
-server.listen(PORT, () => {
-  connectToMongoDB();
+server.listen(PORT, async () => {
+  await connectToMongoDB();
+  await initAgent();
   console.log(`Server Running on port ${PORT}`);
 });
